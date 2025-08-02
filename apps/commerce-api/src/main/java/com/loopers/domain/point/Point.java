@@ -1,8 +1,8 @@
 package com.loopers.domain.point;
 
 import com.loopers.domain.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.loopers.domain.user.User;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 @Entity
@@ -10,15 +10,17 @@ import lombok.Getter;
 @Table(name = "points")
 public class Point extends BaseEntity {
 
-    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
     private long amount;
     private long balance; // 총 보유 잔액
 
 
-    public static Point create(String userId) {
+    public static Point create(User user) {
         Point point = new Point();
 
-        point.userId = userId;
+        point.user = user;
         point.amount = 0L; // 초기 충전 금액
         point.balance = 0L; // 초기 잔액
 

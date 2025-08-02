@@ -3,6 +3,7 @@ package com.loopers.application.point;
 import com.loopers.application.user.UserCommand;
 import com.loopers.application.user.UserFacade;
 import com.loopers.domain.user.Gender;
+import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,6 +71,7 @@ class PointFacadeIntegrationTest {
 
         @DisplayName("해당 ID 의 회원이 존재할 경우, 보유 포인트가 반환된다.")
         @Test
+        @Transactional
         void returnsBalance_whenUserExistsByUserId() {
             // given
             String userId = "oyy";

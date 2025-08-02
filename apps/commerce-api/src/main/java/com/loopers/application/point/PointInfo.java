@@ -8,7 +8,7 @@ public record PointInfo(
 ) {
     public static PointInfo from(Point point) {
         return new PointInfo(
-                point.getUserId(),
+                point.getUser().getUserId(),
                 point.getBalance()
         );
     }
