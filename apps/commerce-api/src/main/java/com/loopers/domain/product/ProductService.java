@@ -47,4 +47,25 @@ public class ProductService {
         }
     }
 
+    public Long updateLikeCount(Long productId, String likeType) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+
+        switch (likeType.toLowerCase()) {
+            case "like" -> product.increaseLikeCount();
+            case "unlike" -> product.decreaseLikeCount();
+            default -> throw new IllegalArgumentException("Invalid like type: " + likeType);
+        }
+        Product savedProduct = productRepository.save(product);
+
+        return savedProduct.getLikeCount();
+    }
+
+    public Long getLikeCount(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+
+        return product.getLikeCount();
+    }
+
 }

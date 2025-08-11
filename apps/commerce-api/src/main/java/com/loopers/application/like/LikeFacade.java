@@ -2,6 +2,7 @@ package com.loopers.application.like;
 
 
 import com.loopers.domain.like.Like;
+import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
@@ -30,11 +31,13 @@ public class LikeFacade {
         User user = userService.getMyInfo(userId); // 유저가 존재하지 않으면 예외 처리 필요 (현재는 통합 테스트 요구사항 때문에 Null로 처리 되어있음)
 
         // service
-        Like savedLike = likeService.like(product, user);
-        Long likeCount = likeService.getLikeCount(productId);
+        LikeChange savedLike = likeService.like(product, user);
+        Long totalLikeCount = savedLike.changed()
+                ? productService.updateLikeCount(product.getId(), "like")
+                : productService.getLikeCount(product.getId());
 
         // info
-        return LikeInfo.of(savedLike.getLikedYn(), likeCount);
+        return LikeInfo.of(savedLike.like().getLikedYn(), totalLikeCount);
     }
 
     @Transactional
@@ -44,11 +47,13 @@ public class LikeFacade {
         User user = userService.getMyInfo(userId); // 유저가 존재하지 않으면 예외 처리 필요 (현재는 통합 테스트 요구사항 때문에 Null로 처리 되어있음)
 
         // service
-        Like savedLike = likeService.unLike(product, user);
-        Long likeCount = likeService.getLikeCount(productId);
+        LikeChange savedLike = likeService.unLike(product, user);
+        Long totalLikeCount = savedLike.changed()
+                ? productService.updateLikeCount(product.getId(), "unlike")
+                : productService.getLikeCount(product.getId());
 
         // info
-        return LikeInfo.of(savedLike.getLikedYn(), likeCount);
+        return LikeInfo.of(savedLike.like().getLikedYn(), totalLikeCount);
     }
 
     public LikeListInfo getLikeProducts(String userId) {
