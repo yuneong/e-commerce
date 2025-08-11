@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +27,15 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "order_id")
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    int totalPrice;
+    private BigDecimal totalPrice;
 
-    OrderStatus status;
+    private OrderStatus status;
 
-    ZonedDateTime paidAt;
+    private ZonedDateTime paidAt;
 
-    public static Order place(User user, List<OrderItem> items) {
+    private Long couponId;
+
+    public static Order place(User user, List<OrderItem> items, DiscountedOrderByCoupon discountedOrderByCoupon) {
         Order order = new Order();
 
         order.validate(user, items);
@@ -41,9 +44,10 @@ public class Order extends BaseEntity {
         for (OrderItem item : items) {
             order.addItem(item);
         }
-        order.totalPrice = order.calculateTotalPrice();
+        order.totalPrice = discountedOrderByCoupon.discountedTotalPrice();
         order.status = OrderStatus.PLACED;
         order.paidAt = ZonedDateTime.now();
+        order.couponId = discountedOrderByCoupon.couponId();
 
         return order;
     }
@@ -63,12 +67,6 @@ public class Order extends BaseEntity {
         }
 
         orderItems.add(item);
-    }
-
-    public int calculateTotalPrice() {
-        return orderItems.stream()
-                .mapToInt(item -> item.getPrice() * item.getQuantity())
-                .sum();
     }
 
     public void updateOrderStatus(OrderStatus status) {

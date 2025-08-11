@@ -1,12 +1,13 @@
 package com.loopers.application.order;
 
-import com.loopers.application.product.ProductQuantityFactory;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.order.DiscountedOrderByCoupon;
 import com.loopers.domain.order.Order;
+import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.Product;
-import com.loopers.domain.product.ProductQuantity;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
@@ -25,6 +26,7 @@ public class OrderFacade {
     private final UserService userService;
     private final ProductService productService;
     private final PointService pointService;
+    private final CouponService couponService;
 
     @Transactional
     public OrderInfo placeOrder(OrderCommand command) {
@@ -33,22 +35,21 @@ public class OrderFacade {
         Point point = pointService.getPoint(user);
 
         // 상품 조회
-        List<Long> productIds = command.items().stream()
-                .map(OrderItemCommand::productId)
-                .toList();
-        List<Product> products = productService.getProductsByIds(productIds);
+        List<Product> products = productService.getProductsByIds(command.items()
+                .stream().map(OrderItemCommand::productId).toList());
+        List<OrderItem> items = OrderItemFactory.createFrom(command.items(), products);
+
+        // 쿠폰 조회 및 적용, 사용
+        DiscountedOrderByCoupon discountedOrderByCoupon = couponService.useCoupon(command.userId(), command.couponId(), items);
 
         // 주문 생성
-        Order order = orderService.createOrder(command.items(), user, products);
-        int totalPrice = order.calculateTotalPrice();
-
-        List<ProductQuantity> productQuantities = ProductQuantityFactory.createFrom(command.items(), products);
+        Order order = orderService.createOrder(user, items, discountedOrderByCoupon);
 
         // 상품 재고 차감 (검증 포함)
-        productService.checkAndDecreaseStock(productQuantities);
+        productService.checkAndDecreaseStock(order.getOrderItems());
 
         // 포인트 차감 (검증 포함)
-        pointService.checkAndUsePoint(point, totalPrice);
+        pointService.checkAndUsePoint(point, discountedOrderByCoupon.discountedTotalPrice().intValue());
 
         // 주문 저장
         orderService.saveOrder(order);
@@ -62,6 +63,7 @@ public class OrderFacade {
         return OrderInfo.from(order, extInfo);
     }
 
+    @Transactional(readOnly = true)
     public List<OrderInfo> getOrders(String userId) {
         // 유저 정보 조회
         User user = userService.getMyInfo(userId);

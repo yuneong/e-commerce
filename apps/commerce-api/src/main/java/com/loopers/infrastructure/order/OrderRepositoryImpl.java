@@ -31,4 +31,9 @@ public class OrderRepositoryImpl implements OrderRepository {
         return orderJpaRepository.findByIdAndUser(orderId, user);
     }
 
+    @Override
+    public List<Order> findAll() {
+        return orderJpaRepository.findAll();
+    }
+
 }

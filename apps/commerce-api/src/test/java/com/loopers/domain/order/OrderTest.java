@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,15 +27,19 @@ class OrderTest {
             // given
             OrderItem item1 = OrderItem.create(product, 1, 1000);
             OrderItem item2 = OrderItem.create(product, 1, 2000);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(1500) // 할인 후 가격 1500원
+            );
 
             // when
-            Order order = Order.place(user, List.of(item1, item2));
+            Order order = Order.place(user, List.of(item1, item2), discountedOrderByCoupon);
 
             // then
             assertAll(
                     () -> assertEquals(user, order.getUser()),
                     () -> assertEquals(2, order.getOrderItems().size()),
-                    () -> assertEquals(3000, order.getTotalPrice()),
+                    () -> assertEquals(BigDecimal.valueOf(1500), order.getTotalPrice()),
                     () -> assertEquals(OrderStatus.PLACED, order.getStatus()),
                     () -> assertNotNull(order.getPaidAt())
             );
@@ -43,8 +48,14 @@ class OrderTest {
         @DisplayName("주문 아이템이 null이면 예외가 발생한다.")
         @Test
         void throwsException_whenItemsNull() {
+            // given
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(1500) // 할인 후 가격 1500원
+            );
+
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> Order.place(user, null));
+            assertThrows(IllegalArgumentException.class, () -> Order.place(user, null, discountedOrderByCoupon));
         }
 
         @DisplayName("주문 사용자(User)가 null이면 예외가 발생한다.")
@@ -52,16 +63,26 @@ class OrderTest {
         void throwsException_whenUserIsNull() {
             // given
             OrderItem item = OrderItem.create(product, 1, 1000);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(500) // 할인 후 가격 500원
+            );
 
             // when & then
-            assertThrows(NullPointerException.class, () -> Order.place(null, List.of(item)));
+            assertThrows(NullPointerException.class, () -> Order.place(null, List.of(item), discountedOrderByCoupon));
         }
 
         @DisplayName("주문 아이템이 빈 리스트이면 예외가 발생한다.")
         @Test
         void throwsException_whenItemsEmpty() {
+            // given
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(0) // 할인 후 가격 0원
+            );
+
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> Order.place(user, List.of()));
+            assertThrows(IllegalArgumentException.class, () -> Order.place(user, List.of(), discountedOrderByCoupon));
         }
     }
 
@@ -96,43 +117,6 @@ class OrderTest {
         }
 
     }
-
-
-    @DisplayName("calculateTotalPrice()")
-    @Nested
-    class CalculateTotalPrice {
-
-        @DisplayName("주문 아이템들의 가격 합계를 계산한다.")
-        @Test
-        void success() {
-            // given
-            Order order = new Order();
-            OrderItem item1 = OrderItem.create(product, 1, 1000);
-            OrderItem item2 = OrderItem.create(product, 1, 2000);
-            order.addItem(item1);
-            order.addItem(item2);
-
-            // when
-            int total = order.calculateTotalPrice();
-
-            // then
-            assertEquals(3000, total);
-        }
-
-        @DisplayName("주문 아이템이 없으면 총합은 0이다.")
-        @Test
-        void returnsZero_whenNoItems() {
-            // given
-            Order order = new Order();
-
-            // when
-            int total = order.calculateTotalPrice();
-
-            // then
-            assertEquals(0, total);
-        }
-    }
-
 
     @DisplayName("updateOrderStatus()")
     @Nested

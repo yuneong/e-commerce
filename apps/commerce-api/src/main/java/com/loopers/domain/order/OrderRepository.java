@@ -14,4 +14,6 @@ public interface OrderRepository {
 
     Optional<Order> findByIdAndUser(Long orderId, User user);
 
+    List<Order> findAll();
+
 }

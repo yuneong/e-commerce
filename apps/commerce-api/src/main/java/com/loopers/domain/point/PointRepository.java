@@ -8,4 +8,6 @@ public interface PointRepository {
 
     Point findByUser(User user);
 
+    Point findUserWithLock(User user);
+
 }

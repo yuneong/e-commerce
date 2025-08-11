@@ -16,6 +16,8 @@ public interface ProductRepository {
 
     List<Product> findAllById(List<Long> productIds);
 
+    List<Product> findAllWithLock(List<Long> productIds);
+
     Product save(Product product);
 
     List<Product> findByAll();

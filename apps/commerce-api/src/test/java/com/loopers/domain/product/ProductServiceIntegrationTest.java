@@ -3,6 +3,8 @@ package com.loopers.domain.product;
 import com.loopers.application.product.ProductCommand;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandRepository;
+import com.loopers.domain.order.OrderItem;
+import com.loopers.support.TestFixture;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -294,31 +296,14 @@ class ProductServiceIntegrationTest {
         void successToDecreaseStock() {
             // given
             Product product = productRepository.findByAll().get(0); // 재고 10
-            ProductQuantity pq = ProductQuantity.of(product, 3);
-            List<ProductQuantity> quantities = List.of(pq);
+            List<OrderItem> items = TestFixture.createOrderItems(product, 3); // 수량 3
 
             // when
-            List<Product> updated = productService.checkAndDecreaseStock(quantities);
+            productService.checkAndDecreaseStock(items);
 
             // then
-            assertAll(
-                    () -> assertThat(updated).hasSize(1),
-                    () -> assertThat(updated.get(0).getStock()).isEqualTo(7)
-            );
-        }
-
-        @DisplayName("차감 수량이 0 이하이면 예외가 발생한다.")
-        @Test
-        void failToDecreaseStock_whenQuantityIsZeroOrNegative() {
-            // given
-            Product product = productRepository.findByAll().get(1); // 재고 10
-            ProductQuantity pq = ProductQuantity.of(product, 0); // 0은 예외 대상
-            List<ProductQuantity> quantities = List.of(pq);
-
-            // when & then
-            assertThrows(IllegalArgumentException.class, () -> {
-                productService.checkAndDecreaseStock(quantities);
-            });
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
+            assertThat(updated.getStock()).isEqualTo(7);
         }
 
         @DisplayName("차감 수량이 현재 재고보다 많으면 예외가 발생한다.")
@@ -326,12 +311,11 @@ class ProductServiceIntegrationTest {
         void failToDecreaseStock_whenInsufficientStock() {
             // given
             Product product = productRepository.findByAll().get(2); // 재고 10
-            ProductQuantity pq = ProductQuantity.of(product, 15); // 수량 > 재고
-            List<ProductQuantity> quantities = List.of(pq);
+            List<OrderItem> items = TestFixture.createOrderItems(product, 15); // 수량 15
 
             // when & then
             assertThrows(IllegalStateException.class, () -> {
-                productService.checkAndDecreaseStock(quantities);
+                productService.checkAndDecreaseStock(items);
             });
         }
     }

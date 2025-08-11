@@ -23,4 +23,9 @@ public class PointRepositoryImpl implements PointRepository {
         return pointJpaRepository.findByUser(user);
     }
 
+    @Override
+    public Point findUserWithLock(User user) {
+        return pointJpaRepository.findUserWithLock(user);
+    }
+
 }

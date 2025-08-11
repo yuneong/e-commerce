@@ -1,11 +1,9 @@
 package com.loopers.domain.order;
 
-import com.loopers.application.order.OrderItemCommand;
-import com.loopers.application.order.OrderItemFactory;
-import com.loopers.domain.product.Product;
 import com.loopers.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -15,16 +13,18 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
+    @Transactional
     public Order createOrder(
-            List<OrderItemCommand> itemCommands,
             User user,
-            List<Product> products
+            List<OrderItem> items,
+            DiscountedOrderByCoupon discountedOrderByCoupon
     ) {
-        List<OrderItem> items = OrderItemFactory.createFrom(itemCommands, products);
+        Order order = Order.place(user, items, discountedOrderByCoupon);
 
-        return Order.place(user, items);
+        return orderRepository.save(order);
     }
 
+    @Transactional
     public Order saveOrder(Order order) {
         // 주문 상태 변경
         order.updateOrderStatus(OrderStatus.PAID);

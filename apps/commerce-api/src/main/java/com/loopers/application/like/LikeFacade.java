@@ -9,6 +9,7 @@ import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class LikeFacade {
     private final ProductService productService;
     private final UserService userService;
 
+    @Transactional
     public LikeInfo like(Long productId, String userId) {
         // 상품, 유저 객체 조회
         Product product = productService.getProductDetail(productId);
@@ -35,6 +37,7 @@ public class LikeFacade {
         return LikeInfo.of(savedLike.getLikedYn(), likeCount);
     }
 
+    @Transactional
     public LikeInfo unLike(Long productId, String userId) {
         // 상품, 유저 객체 조회
         Product product = productService.getProductDetail(productId);

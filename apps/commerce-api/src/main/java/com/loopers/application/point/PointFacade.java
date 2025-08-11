@@ -24,7 +24,7 @@ public class PointFacade {
         return PointInfo.from(point);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PointInfo getPoint(String userId) {
         // service
         User user = userService.getMyInfo(userId);

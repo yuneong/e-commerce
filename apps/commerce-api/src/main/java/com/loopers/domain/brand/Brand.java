@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Brand extends BaseEntity {
 
-    String name;
-    String description;
-    String imageUrl;
+    private String name;
+    private String description;
+    private String imageUrl;
 
     public static Brand create(String name, String description, String imageUrl) {
         Brand brand = new Brand();

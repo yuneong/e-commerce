@@ -12,14 +12,15 @@ import java.util.List;
 public class OrderV1Dto {
 
     public record OrderRequest(
-            List<OrderItemV1Dto.OrderItemRequest> items
+            List<OrderItemV1Dto.OrderItemRequest> items,
+            Long couponId
     ) {
         public OrderCommand toCommand(String userId) {
             List<OrderItemCommand> itemCommands = this.items.stream()
                     .map(OrderItemV1Dto.OrderItemRequest::toCommand)
                     .toList();
 
-            return new OrderCommand(userId, itemCommands);
+            return new OrderCommand(userId, itemCommands, couponId);
         }
 
     }

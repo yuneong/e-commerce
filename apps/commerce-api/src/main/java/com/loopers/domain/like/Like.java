@@ -27,6 +27,9 @@ public class Like extends BaseEntity {
     @Column(name = "liked_yn")
     private LikeStatus likedYn;
 
+    @Version
+    private Long version;
+
     public void like() {
         this.likedYn = LikeStatus.Y;
     }

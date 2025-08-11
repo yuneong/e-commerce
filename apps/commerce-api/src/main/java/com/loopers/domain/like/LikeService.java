@@ -41,14 +41,12 @@ public class LikeService {
 
     @Transactional
     public Like like(Product product, User user) {
-        Like like = likeRepository.findByProductAndUser(product, user)
+        return likeRepository.findByProductAndUser(product, user)
                 .map(existingLike -> {
                     existingLike.like();
                     return existingLike;
                 })
                 .orElse(Like.create(user, product));
-
-        return likeRepository.save(like);
     }
 
     @Transactional
@@ -58,7 +56,7 @@ public class LikeService {
 
         like.unLike();
 
-        return likeRepository.save(like);
+        return like;
     }
 
     public List<Like> getLikeProducts(User user) {

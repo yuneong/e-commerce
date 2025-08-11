@@ -14,9 +14,9 @@ public class CartItem extends BaseEntity {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    int quantity;
+    private int quantity;
 
-    int price;
+    private int price;
 
     public static CartItem create(Product product, int quantity, int price) {
         CartItem cartItem = new CartItem();

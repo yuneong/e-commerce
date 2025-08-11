@@ -1,6 +1,5 @@
 package com.loopers.domain.order;
 
-import com.loopers.application.order.OrderItemCommand;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandRepository;
 import com.loopers.domain.product.Product;
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,17 +73,19 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
-
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 2, 10000);
-            List<OrderItemCommand> commands = List.of(command);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(18000) // 할인 후 가격
+            );
 
             // when
-            Order order = orderService.createOrder(commands, savedUser, List.of(savedProduct));
+            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
 
             // then
             assertAll(
                     () -> assertThat(order.getOrderItems()).hasSize(1),
-                    () -> assertThat(order.getTotalPrice()).isEqualTo(20000)
+                    () -> assertThat(order.getTotalPrice()).isEqualTo(BigDecimal.valueOf(18000))
             );
         }
 
@@ -100,19 +102,21 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
-
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 2, 10000);
-            List<OrderItemCommand> commands = List.of(command);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(18000) // 할인 후 가격
+            );
 
             // when & then
             assertThrows(NullPointerException.class, () -> {
-                orderService.createOrder(commands, null, List.of(savedProduct));
+                orderService.createOrder(null, items, discountedOrderByCoupon);
             });
         }
 
         @DisplayName("주문 아이템이 비어있으면 예외가 발생한다.")
         @Test
-        void createOrder_fail_dueToEmptyCommands() {
+        void createOrder_fail_dueToEmptyOrderItems() {
             // given
             Product product = Product.create(
                     savedBrand,
@@ -123,12 +127,15 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
-
-            List<OrderItemCommand> commands = List.of(); // 빈 리스트
+            List<OrderItem> items = List.of();
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(18000) // 할인 후 가격
+            );
 
             // when & then
             assertThrows(IllegalArgumentException.class, () -> {
-                orderService.createOrder(commands, savedUser, List.of(savedProduct));
+                orderService.createOrder(savedUser, items, discountedOrderByCoupon);
             });
         }
     }
@@ -150,11 +157,13 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(18000) // 할인 후 가격
+            );
 
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 2, 10000);
-            List<OrderItemCommand> commands = List.of(command);
-
-            Order order = orderService.createOrder(commands, savedUser, List.of(savedProduct));
+            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
 
             // when
             Order savedOrder = orderService.saveOrder(order);
@@ -177,7 +186,6 @@ class OrderServiceIntegrationTest {
 
     }
 
-
     @DisplayName("주문 목록 조회 시,")
     @Nested
     class getOrders {
@@ -195,9 +203,13 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(8000) // 할인 후 가격
+            );
 
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 1, 10000);
-            Order order = orderService.createOrder(List.of(command), savedUser, List.of(savedProduct));
+            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
             orderService.saveOrder(order);
 
             // when
@@ -237,9 +249,13 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(8000) // 할인 후 가격
+            );
 
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 1, 10000);
-            Order order = orderService.saveOrder(orderService.createOrder(List.of(command), savedUser, List.of(savedProduct)));
+            Order order = orderService.saveOrder(orderService.createOrder(savedUser, items, discountedOrderByCoupon));
 
             // when
             Order found = orderService.getOrderDetail(order.getId(), savedUser);
@@ -272,9 +288,13 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
+            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
+                    1L,
+                    BigDecimal.valueOf(8000) // 할인 후 가격
+            );
 
-            OrderItemCommand command = new OrderItemCommand(savedProduct.getId(), 1, 10000);
-            Order order = orderService.saveOrder(orderService.createOrder(List.of(command), savedUser, List.of(savedProduct)));
+            Order order = orderService.saveOrder(orderService.createOrder(savedUser, items, discountedOrderByCoupon));
 
             // when & then
             assertThrows(IllegalArgumentException.class, () -> {
