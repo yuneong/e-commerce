@@ -82,6 +82,7 @@ public class ProductService {
         }
     }
 
+    @Transactional
     public Long updateLikeCount(Long productId, String likeType) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
