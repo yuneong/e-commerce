@@ -12,5 +12,7 @@ dependencies {
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
     testFixturesImplementation("com.redis:testcontainers-redis")
 }

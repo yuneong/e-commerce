@@ -12,6 +12,8 @@ public interface ProductRepository {
 
     Optional<Product> findById(Long productId);
 
+    Optional<Product> findWithBrandById(Long productId);
+
     List<Product> saveAll(List<Product> products);
 
     List<Product> findAllById(List<Long> productIds);
