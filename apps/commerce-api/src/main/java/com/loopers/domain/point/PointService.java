@@ -34,8 +34,19 @@ public class PointService {
         return pointRepository.save(point);
     }
 
-    @Transactional
+
     public Point getPoint(User user) {
+        // repository
+        Point point = pointRepository.findByUser(user);
+        if (point == null) {
+            throw new IllegalArgumentException("Point not found for user: " + user.getUserId());
+        }
+
+        return point;
+    }
+
+    @Transactional
+    public Point getPointWithLock(User user) {
         // repository
         return Optional.ofNullable(pointRepository.findUserWithLock(user))
                 .orElseThrow(() -> new IllegalArgumentException("Point not found for user: " + user.getUserId()));

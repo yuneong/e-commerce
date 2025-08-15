@@ -1,8 +1,8 @@
 package com.loopers.interfaces.api.product;
 
-import com.loopers.application.product.ProductContent;
 import com.loopers.application.product.ProductInfo;
 import com.loopers.application.product.ProductListInfo;
+import com.loopers.domain.product.Product;
 
 import java.util.List;
 
@@ -40,16 +40,16 @@ public class ProductV1Dto {
             Long brandId,
             String brandName
     ) {
-        public static ProductContentResponse from(ProductContent content) {
+        public static ProductContentResponse from(Product product) {
             return new ProductContentResponse(
-                    content.id(),
-                    content.name(),
-                    content.description(),
-                    content.imageUrl(),
-                    content.price(),
-                    content.likeCount(),
-                    content.brandId(),
-                    content.brandName()
+                    product.getId(),
+                    product.getName(),
+                    product.getDescription(),
+                    product.getImageUrl(),
+                    product.getPrice(),
+                    product.getLikeCount(),
+                    product.getBrand().getId(),
+                    product.getBrand().getName()
             );
         }
     }

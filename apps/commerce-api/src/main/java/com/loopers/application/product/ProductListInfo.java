@@ -1,11 +1,12 @@
 package com.loopers.application.product;
 
-import org.springframework.data.domain.Pageable;
+import com.loopers.domain.product.Product;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public record ProductListInfo(
-        List<ProductContent> contents,
+        List<Product> contents,
         int page,
         int size,
         long totalElements,
@@ -13,16 +14,14 @@ public record ProductListInfo(
 ) {
 
     public static ProductListInfo from(
-            ProductContentBundle bundle,
-            Pageable pageable,
-            long totalElements
+            Page<Product> products
     ) {
         return new ProductListInfo(
-                bundle.contents(),
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                totalElements,
-                (int) Math.ceil((double) totalElements / pageable.getPageSize())
+                products.getContent(),
+                products.getNumber(),
+                products.getSize(),
+                products.getTotalElements(),
+                products.getTotalPages()
         );
     }
 

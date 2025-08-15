@@ -14,14 +14,14 @@ public record ProductInfo(
         String brandName
 ) {
 
-    public static ProductInfo from(Product product, Long likeCount) {
+    public static ProductInfo from(Product product) {
         return new ProductInfo(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
                 product.getImageUrl(),
                 product.getPrice(),
-                likeCount,
+                product.getLikeCount(),
                 product.getBrand().getId(),
                 product.getBrand().getName()
         );

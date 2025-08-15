@@ -129,7 +129,7 @@ class ProductTest {
 
             assertNotNull(product);
             assertEquals("상품명", product.getName());
-            assertEquals("ACTIVE", product.getStatus());
+            assertEquals(ProductStatus.ACTIVE, product.getStatus());
         }
     }
 
@@ -185,5 +185,87 @@ class ProductTest {
             assertThrows(IllegalStateException.class, () -> product.decreaseStock(10));
         }
     }
+
+
+    @DisplayName("좋아요 수 변경 시,")
+    @Nested
+    class LikeCount {
+
+        @DisplayName("increaseLikeCount() 호출 시 1 증가한다.")
+        @Test
+        void success_whenIncreaseOnce() {
+            Product product = Product.create(
+                    dummyBrand,
+                    "상품명",
+                    "설명",
+                    "https://example.com/image.jpg",
+                    1000,
+                    10
+            );
+
+            product.increaseLikeCount();
+
+            assertEquals(1L, product.getLikeCount());
+        }
+
+        @DisplayName("increaseLikeCount()를 N번 호출하면 likeCount가 N이 된다.")
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 5, 10})
+        void success_whenIncreaseNTimes(int times) {
+            Product product = Product.create(
+                    dummyBrand,
+                    "상품명",
+                    "설명",
+                    "https://example.com/image.jpg",
+                    1000,
+                    10
+            );
+
+            for (int i = 0; i < times; i++) {
+                product.increaseLikeCount();
+            }
+
+            assertEquals((long) times, product.getLikeCount());
+        }
+
+        @DisplayName("현재 likeCount가 양수라면 decreaseLikeCount() 호출 시 1 감소한다.")
+        @ParameterizedTest
+        @ValueSource(ints = {1, 2, 5})
+        void success_whenDecreaseWithPositiveCount(int initial) {
+            Product product = Product.create(
+                    dummyBrand,
+                    "상품명",
+                    "설명",
+                    "https://example.com/image.jpg",
+                    1000,
+                    10
+            );
+
+            // likeCount를 initial 값으로 맞춤
+            for (int i = 0; i < initial; i++) {
+                product.increaseLikeCount();
+            }
+
+            product.decreaseLikeCount();
+
+            assertEquals((long) initial - 1L, product.getLikeCount());
+        }
+
+        @DisplayName("현재 likeCount가 0이면 decreaseLikeCount() 호출 시 예외가 발생한다.")
+        @Test
+        void throwsException_whenDecreaseAtZero() {
+            Product product = Product.create(
+                    dummyBrand,
+                    "상품명",
+                    "설명",
+                    "https://example.com/image.jpg",
+                    1000,
+                    10
+            );
+
+            assertThrows(IllegalStateException.class, product::decreaseLikeCount);
+        }
+    }
+
 
 }

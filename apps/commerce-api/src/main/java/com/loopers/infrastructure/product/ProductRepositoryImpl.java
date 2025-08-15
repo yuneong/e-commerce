@@ -34,6 +34,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public Optional<Product> findWithBrandById(Long productId) {
+        return productJpaRepository.findWithBrandById(productId);
+    }
+
+    @Override
     public List<Product> saveAll(List<Product> products) {
         return productJpaRepository.saveAll(products);
     }

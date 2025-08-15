@@ -27,7 +27,9 @@ public class Product extends BaseEntity {
 
     private int stock;
 
-    private String status;
+    private ProductStatus status = ProductStatus.ACTIVE; // 기본 상태를 ACTIVE로 설정`
+
+    private Long likeCount = 0L;
 
     @Version
     private Long version;
@@ -43,7 +45,6 @@ public class Product extends BaseEntity {
         product.imageUrl = imageUrl;
         product.price = price;
         product.stock = stock;
-        product.status = "ACTIVE"; // 기본 상태를 ACTIVE로 설정
 
         return product;
     }
@@ -76,6 +77,17 @@ public class Product extends BaseEntity {
             throw new IllegalStateException("재고가 부족합니다.");
         }
         this.stock -= quantity;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount += 1L;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount <= 0L) {
+            throw new IllegalStateException("Like count cannot be less than zero.");
+        }
+        this.likeCount -= 1L;
     }
 
 }

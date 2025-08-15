@@ -185,14 +185,15 @@ class LikeServiceIntegrationTest {
             Optional<User> user = userRepository.findByUserId("user1");
 
             // when
-            Like savedLike = likeService.like(product, user.get());
+            LikeChange savedLike = likeService.like(product, user.get());
 
             // then
             assertAll(
                     () -> assertThat(savedLike).isNotNull(),
-                    () -> assertThat(savedLike.getProduct().getId()).isEqualTo(product.getId()),
-                    () -> assertThat(savedLike.getUser().getUserId()).isEqualTo(user.get().getUserId()),
-                    () -> assertThat(savedLike.getLikedYn()).isEqualTo(LikeStatus.Y)
+                    () -> assertThat(savedLike.like().getProduct().getId()).isEqualTo(product.getId()),
+                    () -> assertThat(savedLike.like().getUser().getUserId()).isEqualTo(user.get().getUserId()),
+                    () -> assertThat(savedLike.like().getLikedYn()).isEqualTo(LikeStatus.Y),
+                    () -> assertThat(savedLike.changed()).isTrue()
             );
         }
 
@@ -204,14 +205,15 @@ class LikeServiceIntegrationTest {
             Optional<User> user = userRepository.findByUserId("user1");
 
             // when
-            Like savedLike = likeService.like(product, user.get());
+            LikeChange savedLike = likeService.like(product, user.get());
 
             // then
             assertAll(
                     () -> assertThat(savedLike).isNotNull(),
-                    () -> assertThat(savedLike.getProduct().getId()).isEqualTo(product.getId()),
-                    () -> assertThat(savedLike.getUser().getUserId()).isEqualTo(user.get().getUserId()),
-                    () -> assertThat(savedLike.getLikedYn()).isEqualTo(LikeStatus.Y)
+                    () -> assertThat(savedLike.like().getProduct().getId()).isEqualTo(product.getId()),
+                    () -> assertThat(savedLike.like().getUser().getUserId()).isEqualTo(user.get().getUserId()),
+                    () -> assertThat(savedLike.like().getLikedYn()).isEqualTo(LikeStatus.Y),
+                    () -> assertThat(savedLike.changed()).isFalse()
             );
         }
     }
@@ -230,14 +232,15 @@ class LikeServiceIntegrationTest {
             Optional<User> user = userRepository.findByUserId("user1");
 
             // when
-            Like savedLike = likeService.unLike(product, user.get());
+            LikeChange savedLike = likeService.unLike(product, user.get());
 
             // then
             assertAll(
                     () -> assertThat(savedLike).isNotNull(),
-                    () -> assertThat(savedLike.getProduct().getId()).isEqualTo(product.getId()),
-                    () -> assertThat(savedLike.getUser().getUserId()).isEqualTo(user.get().getUserId()),
-                    () -> assertThat(savedLike.getLikedYn()).isEqualTo(LikeStatus.N)
+                    () -> assertThat(savedLike.like().getProduct().getId()).isEqualTo(product.getId()),
+                    () -> assertThat(savedLike.like().getUser().getUserId()).isEqualTo(user.get().getUserId()),
+                    () -> assertThat(savedLike.like().getLikedYn()).isEqualTo(LikeStatus.N),
+                    () -> assertThat(savedLike.changed()).isTrue()
             );
         }
 
