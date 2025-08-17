@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.product.ProductCommand;
 import com.loopers.domain.order.OrderItem;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +22,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    @Value("${cache.version.product}") public static String CACHE_VERSION;
 
     public Page<Product> getProducts(ProductCommand command) {
         // command -> domain
@@ -36,7 +38,7 @@ public class ProductService {
         );
     }
 
-    @Cacheable(value = "product", key = "'detail:' + #productId")
+    @Cacheable(value = "product", key = "@productService.CACHE_VERSION + ':detail:' + #productId")
     public Product getProductDetailForCaching(Long productId) {
         // repository
         return productRepository.findWithBrandById(productId).orElseThrow(
@@ -45,7 +47,7 @@ public class ProductService {
     }
 
     public Product getProductDetailForRedisTemplate(Long productId) throws JsonProcessingException {
-        String key = "product:detail:" + productId;
+        String key = "product:" + CACHE_VERSION + ":detail:" + productId;
         String json = "";
 
         // 캐시 조회

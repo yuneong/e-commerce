@@ -29,6 +29,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+cache:
+#  스키마 변경시에 버전 업데이트 필요함
+  version:
+    product: v1
+
 ---
 spring:
   config:

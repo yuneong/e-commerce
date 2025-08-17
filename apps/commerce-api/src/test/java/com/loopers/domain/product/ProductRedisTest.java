@@ -8,6 +8,7 @@ import com.loopers.utils.DatabaseCleanUp;
 import com.loopers.utils.RedisCleanUp;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -52,6 +53,9 @@ class ProductRedisTest {
 
     private Brand testBrand;
     private Product testProduct;
+
+    @Value("${cache.version.product}")
+    public static String CACHE_VERSION;
 
     @BeforeEach
     void setupTestData() {
@@ -123,7 +127,7 @@ class ProductRedisTest {
         void shouldThrowExceptionAndNotCache_whenIdNotFound() {
             // given
             Long invalidId = -999L;
-            String key = "detail:" + invalidId;
+            String key = CACHE_VERSION +":detail:" + invalidId;
 
             // when & then
             assertThatThrownBy(() -> productService.getProductDetailForCaching(invalidId))
@@ -143,7 +147,7 @@ class ProductRedisTest {
             // given
             Product product = testProduct;
             Long productId = product.getId();
-            String key = "detail:" + productId;
+            String key = CACHE_VERSION + ":detail:" + productId;
 
             // when
             // 최초 조회 → 캐시 저장
@@ -172,7 +176,7 @@ class ProductRedisTest {
         void cacheHitAndMiss() throws JsonProcessingException {
             // given
             Product product = testProduct;
-            String key = "product:detail:" + product.getId();
+            String key = "product:" + CACHE_VERSION + ":detail:" + product.getId();
             Product firstCall = productService.getProductDetailForRedisTemplate(product.getId());
 
             // when
@@ -192,7 +196,7 @@ class ProductRedisTest {
         void shouldReloadFromDbAndRecache_whenTtlExpires() throws Exception {
             // given
             Product product = testProduct;
-            String key = "product:detail:" + product.getId();
+            String key = "product:" + CACHE_VERSION + ":detail:" + product.getId();
 
             // 최초 조회 -> DB 조회 -> 캐시 저장
             Product firstCall = productService.getProductDetailForRedisTemplate(product.getId());
@@ -224,7 +228,7 @@ class ProductRedisTest {
         void shouldThrowExceptionAndNotCache_whenProductNotFound() {
             // given
             Long invalidId = -999L;
-            String key = "product:detail:" + invalidId;
+            String key = "product:" + CACHE_VERSION + ":detail:" + invalidId;
 
             // when & then
             assertThatThrownBy(() -> productService.getProductDetailForRedisTemplate(invalidId))
@@ -242,7 +246,7 @@ class ProductRedisTest {
         void shouldSerializeAndSaveJsonToRedis() throws Exception {
             // given
             Product product = testProduct;
-            String key = "product:detail:" + product.getId();
+            String key = "product:" + CACHE_VERSION + ":detail:" + product.getId();
 
             // when
             productService.getProductDetailForRedisTemplate(product.getId());
