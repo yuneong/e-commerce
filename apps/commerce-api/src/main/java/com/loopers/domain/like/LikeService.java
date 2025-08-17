@@ -40,23 +40,27 @@ public class LikeService {
     }
 
     @Transactional
-    public Like like(Product product, User user) {
+    public LikeChange like(Product product, User user) {
         return likeRepository.findByProductAndUser(product, user)
                 .map(existingLike -> {
+                    String before = existingLike.getLikedYn().toString();
                     existingLike.like();
-                    return existingLike;
+                    boolean changed = !"Y".equals(before);
+                    return new LikeChange(existingLike, changed);
                 })
-                .orElse(Like.create(user, product));
+                .orElseGet(() -> new LikeChange(Like.create(user, product), true));
     }
 
     @Transactional
-    public Like unLike(Product product, User user) {
+    public LikeChange unLike(Product product, User user) {
         Like like = likeRepository.findByProductAndUser(product, user)
                 .orElseThrow(() -> new IllegalArgumentException("Like not found for product and user"));
 
+        String before = like.getLikedYn().toString();
         like.unLike();
+        boolean changed = !"N".equals(before);
 
-        return like;
+        return new LikeChange(like, changed);
     }
 
     public List<Like> getLikeProducts(User user) {

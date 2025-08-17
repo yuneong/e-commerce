@@ -54,12 +54,12 @@ class LikeFacadeConcurrencyTest {
     private DatabaseCleanUp databaseCleanUp;
 
     private List<User> users;
-    private Product product;
+    private Product savedProduct;
 
     @BeforeEach
     void setUp() {
         Brand brand = brandRepository.save(TestFixture.createBrand());
-        product = productRepository.save(TestFixture.createProduct(brand));
+        Product product = productRepository.save(TestFixture.createProduct(brand));
 
         users = new ArrayList<>();
 
@@ -70,8 +70,11 @@ class LikeFacadeConcurrencyTest {
             User user = userRepository.save(User.create(userId, Gender.F, "1999-08-21", email));
             users.add(user);
 
-            likeRepository.save(Like.create(user, product)); // 모든 유저가 좋아요 추가
+            likeRepository.save(Like.create(user, product)); // 모든 유저 - 좋아요 추가
+
+            product.increaseLikeCount();
         }
+        savedProduct = productRepository.save(product);
     }
 
     @AfterEach
@@ -87,7 +90,7 @@ class LikeFacadeConcurrencyTest {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
-        Long productId = product.getId();
+        Long productId = savedProduct.getId();
         List<User> testUsers = users.subList(0, threadCount);
 
         for (int i = 0; i < threadCount; i++) {
@@ -114,9 +117,14 @@ class LikeFacadeConcurrencyTest {
 
         Long finalLikeCount = likeService.getLikeCount(productId);
         System.out.printf("\n최종 좋아요 수: %d\n", finalLikeCount);
-        assertThat(finalLikeCount)
-                .isBetween(0L, (long) testUsers.size())
-                .withFailMessage("최종 좋아요 수는 0 이상, 유저 수 이하이어야 합니다.");
+
+        Long likeCountFromProduct = productRepository.findById(productId)
+                .orElseThrow()
+                .getLikeCount();
+        System.out.printf("\n상품 객체에 저장된 좋아요 수: %d\n", likeCountFromProduct);
+
+        assertThat(likeCountFromProduct).isEqualTo(finalLikeCount);
+        assertThat(finalLikeCount).isBetween(0L, (long) testUsers.size());
     }
 
 }

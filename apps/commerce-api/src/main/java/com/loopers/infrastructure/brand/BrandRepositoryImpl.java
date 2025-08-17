@@ -5,6 +5,7 @@ import com.loopers.domain.brand.BrandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -21,6 +22,11 @@ public class BrandRepositoryImpl implements BrandRepository {
     @Override
     public Brand save(Brand brand) {
         return brandJpaRepository.save(brand);
+    }
+
+    @Override
+    public List<Brand> saveAll(List<Brand> brands) {
+        return brandJpaRepository.saveAll(brands);
     }
 
 }

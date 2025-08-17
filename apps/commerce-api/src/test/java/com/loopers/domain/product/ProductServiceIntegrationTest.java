@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -37,6 +38,7 @@ class ProductServiceIntegrationTest {
     private DatabaseCleanUp databaseCleanUp;
 
     private Brand testBrand;
+    private List<Product> testProducts;
 
     @BeforeEach
     void setupTestData() {
@@ -57,7 +59,7 @@ class ProductServiceIntegrationTest {
                 ))
                 .toList();
 
-        productRepository.saveAll(products);
+        testProducts = productRepository.saveAll(products);
     }
 
     @AfterEach
@@ -188,6 +190,37 @@ class ProductServiceIntegrationTest {
             assertThat(products).isNotNull();
             assertThat(products.getContent()).hasSize(20);
         }
+
+        @DisplayName("좋아요 순으로 정렬된다.")
+        @Test
+        void successToGetProductsSortedByLikeCount() {
+            // given
+            ProductCommand command = new ProductCommand(
+                    testBrand.getId(),
+                    0,
+                    30,
+                    Sort.by(Sort.Direction.DESC, "likeCount")
+            );
+
+            // 모든 상품에 대해 좋아요 수를 1씩 증가시켜서 마지막 상품이 좋아요 수 제일 많도록 세팅
+            for (int i = 0; i < testProducts.size(); i++) {
+                for (int j = 0; j < i; j++) {
+                    testProducts.get(i).increaseLikeCount();
+                }
+                productRepository.save(testProducts.get(i));
+            }
+
+            // when
+            Page<Product> products = productService.getProducts(command);
+
+            // then
+            List<Long> likeCounts = products.getContent().stream()
+                    .map(Product::getLikeCount)
+                    .toList();
+            assertThat(likeCounts).isSortedAccordingTo(Comparator.reverseOrder());
+            assertThat(products.getContent().get(0).getId()).isEqualTo(testProducts.get(29).getId());
+        }
+
     }
 
     @DisplayName("상품 상세 조회 시,")
@@ -201,16 +234,19 @@ class ProductServiceIntegrationTest {
             Pageable pageable = PageRequest.of(0, 1);
             ProductSearchCondition condition = new ProductSearchCondition(testBrand.getId(), pageable);
             Product product = productRepository.findByCondition(condition).getContent().get(0);
+            product.increaseLikeCount(); // 좋아요 +1
+            Product saveProduct = productRepository.save(product);
 
             // when
-            Product foundProduct = productService.getProductDetail(product.getId());
+            Product foundProduct = productService.getProductDetail(saveProduct.getId());
 
             // then
             assertAll(
                     () -> assertThat(foundProduct).isNotNull(),
-                    () -> assertThat(foundProduct.getId()).isEqualTo(product.getId()),
-                    () -> assertThat(foundProduct.getName()).isEqualTo(product.getName()),
-                    () -> assertThat(foundProduct.getPrice()).isEqualTo(product.getPrice())
+                    () -> assertThat(foundProduct.getId()).isEqualTo(saveProduct.getId()),
+                    () -> assertThat(foundProduct.getName()).isEqualTo(saveProduct.getName()),
+                    () -> assertThat(foundProduct.getPrice()).isEqualTo(saveProduct.getPrice()),
+                    () -> assertThat(foundProduct.getLikeCount()).isEqualTo(1L)
             );
         }
 
@@ -316,6 +352,108 @@ class ProductServiceIntegrationTest {
             // when & then
             assertThrows(IllegalStateException.class, () -> {
                 productService.checkAndDecreaseStock(items);
+            });
+        }
+    }
+
+    @DisplayName("좋아요 수 업데이트 시,")
+    @Nested
+    class updateLikeCount {
+
+        @DisplayName("like 타입이면 카운트가 1 증가한다")
+        @Test
+        void success_increase_whenLikeType() {
+            // given
+            Product product = productRepository.findByAll().get(0);
+
+            // when
+            Long countAfter = productService.updateLikeCount(product.getId(), "like");
+
+            // then
+            assertThat(countAfter).isEqualTo(1L);
+            assertThat(productService.getLikeCount(product.getId())).isEqualTo(1L);
+        }
+
+        @DisplayName("현재 카운트가 양수이면 unlike 타입으로 1 감소한다")
+        @Test
+        void success_decrease_whenUnlikeType_andPositive() {
+            // given
+            Product product = productRepository.findByAll().get(1);
+            productService.updateLikeCount(product.getId(), "like");
+            productService.updateLikeCount(product.getId(), "like");
+
+            // when
+            Long countAfter = productService.updateLikeCount(product.getId(), "unlike");
+
+            // then
+            assertThat(countAfter).isEqualTo(1L); // 2 -> 1
+            assertThat(productService.getLikeCount(product.getId())).isEqualTo(1L);
+        }
+
+        @DisplayName("현재 카운트가 0일 때 unlike 타입을 호출하면 예외가 발생한다")
+        @Test
+        void fail_unlike_whenZero() {
+            // given
+            Product product = productRepository.findByAll().get(2); // 초기 likeCount = 0
+
+            // when & then
+            assertThrows(IllegalStateException.class, () ->
+                    productService.updateLikeCount(product.getId(), "unlike")
+            );
+        }
+
+        @DisplayName("지원하지 않는 likeType이면 IllegalArgumentException이 발생한다")
+        @Test
+        void fail_whenInvalidLikeType() {
+            // given
+            Product product = productRepository.findByAll().get(3);
+
+            // when & then
+            assertThrows(IllegalArgumentException.class, () ->
+                    productService.updateLikeCount(product.getId(), "toggle")
+            );
+        }
+
+        @DisplayName("존재하지 않는 상품 ID로 updateLikeCount 호출 시 예외가 발생한다")
+        @Test
+        void fail_update_whenProductNotFound() {
+            // given
+            Long notExistProductId = 999_999L;
+
+            // when & then
+            assertThrows(IllegalArgumentException.class, () ->
+                    productService.updateLikeCount(notExistProductId, "like")
+            );
+        }
+
+    }
+
+    @DisplayName("좋아요 수 조회 시,")
+    @Nested
+    class getLikeCount {
+
+        @DisplayName("존재하는 상품 ID로 조회 시, 좋아요 수가 반환된다.")
+        @Test
+        void returnsLikeCount_whenProductExists() {
+            // given
+            Product product = productRepository.findByAll().get(0);
+
+            // when
+            Long likeCount = productService.getLikeCount(product.getId());
+
+            // then
+            assertThat(likeCount).isEqualTo(product.getLikeCount());
+        }
+
+        @DisplayName("존재하지 않는 상품 ID로 조회 시, 예외가 발생한다.")
+        @Test
+        void throwIllegalArgumentException_whenProductIdNotExist() {
+            // given
+            Long notExistProductId = 999L;
+
+            // when & then
+            assertThrows(IllegalArgumentException.class, () -> {
+                productService.getLikeCount(notExistProductId);
             });
         }
     }
