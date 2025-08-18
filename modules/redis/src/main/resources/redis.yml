@@ -18,18 +18,22 @@ datasource:
 spring:
   config:
     activate:
-      on-profile: local, test
+      on-profile: local
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
 
 datasource:
-    redis:
-      master:
-        host: localhost
-        port: 6379
-      replicas:
-        - host: localhost
-          port: 6380
-
-
+  redis:
+    master:
+      host: localhost
+      port: 6379
+    replicas:
+      - host: localhost
+        port: 6380
 
 ---
 spring:
@@ -37,13 +41,11 @@ spring:
     activate:
       on-profile: dev
 
-
 ---
 spring:
   config:
     activate:
       on-profile: qa
-
 
 ---
 spring:

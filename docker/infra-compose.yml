@@ -63,6 +63,27 @@ services:
       timeout: 2s
       retries: 10
 
+  # pg 도커 설정
+  pg-simulator:
+    build:
+      context: ..
+      dockerfile: apps/pg-simulator/Dockerfile
+    image: pg-simulator
+    depends_on:
+      - mysql
+      - redis-master
+      - redis-readonly
+    ports:
+      - "8082:8082"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=paymentuser
+      - MYSQL_PASSWORD=paymentuser
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT=6379
+      - REDIS_REPLICA_1_HOST=redis-readonly
+      - REDIS_REPLICA_1_PORT=6379
+
 volumes:
   mysql-8-data:
   redis_master_data:

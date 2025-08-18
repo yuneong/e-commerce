@@ -7,7 +7,8 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        default_batch_fetch_size: 100
+        batch_fetch_style: padded
+        default_batch_fetch_size: 21
         timezone.default_storage: NORMALIZE_UTC
         jdbc.time_zone: UTC
 
@@ -35,16 +36,35 @@ spring.config.activate.on-profile: local
 
 spring:
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+#    defer-datasource-initialization: true
+#  sql:
+#    init:
+#      mode: always
 
-datasource:
-  mysql-jpa:
-    main:
-      jdbc-url: jdbc:mysql://localhost:3306/loopers
-      username: application
-      password: application
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      multiline: true
+      logging: slf4j
+      log-file:
+
+logging:
+  level:
+    org.springframework.jdbc.core.JdbcTemplate: DEBUG
+
+#datasource:
+#  mysql-jpa:
+#    main:
+#      jdbc-url: jdbc:mysql://localhost:3306/loopers
+#      username: application
+#      password: application
 
 ---
 spring.config.activate.on-profile: test
@@ -54,6 +74,10 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create
+    defer-datasource-initialization: true
+#  sql:
+#    init:
+#      mode: always
 
 datasource:
   mysql-jpa:
