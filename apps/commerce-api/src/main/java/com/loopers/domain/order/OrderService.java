@@ -27,7 +27,7 @@ public class OrderService {
     @Transactional
     public Order saveOrder(Order order) {
         // 주문 상태 변경
-        order.updateOrderStatus(OrderStatus.PLACED);
+        order.updateOrderStatus(OrderStatus.COMPLETE);
 
         return orderRepository.save(order);
     }

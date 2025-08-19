@@ -45,7 +45,7 @@ public class Order extends BaseEntity {
             order.addItem(item);
         }
         order.totalPrice = discountedOrderByCoupon.discountedTotalPrice();
-        order.status = OrderStatus.CREATED;
+        order.status = OrderStatus.PENDING;
         order.paidAt = ZonedDateTime.now();
         order.couponId = discountedOrderByCoupon.couponId();
 
