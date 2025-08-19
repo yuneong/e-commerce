@@ -40,7 +40,7 @@ class OrderTest {
                     () -> assertEquals(user, order.getUser()),
                     () -> assertEquals(2, order.getOrderItems().size()),
                     () -> assertEquals(BigDecimal.valueOf(1500), order.getTotalPrice()),
-                    () -> assertEquals(OrderStatus.PLACED, order.getStatus()),
+                    () -> assertEquals(OrderStatus.CREATED, order.getStatus()),
                     () -> assertNotNull(order.getPaidAt())
             );
         }

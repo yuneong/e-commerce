@@ -106,7 +106,9 @@ class OrderFacadeConcurrencyTest {
         return new OrderCommand(
                 userId,
                 List.of(new OrderItemCommand(productId, 1, 1000)),
-                couponId
+                couponId,
+                "SAMSUNG",
+                "1234-5678-9012-3456"
         );
     }
 

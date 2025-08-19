@@ -83,7 +83,9 @@ class OrderFacadeIntegrationTest {
         return new OrderCommand(
                 user.getUserId(),
                 List.of(new OrderItemCommand(product.getId(), 2, 1000)),
-                coupon.getId()
+                coupon.getId(),
+                "SAMSUNG",
+                "1234-5678-9012-3456"
         );
     }
 
@@ -117,7 +119,7 @@ class OrderFacadeIntegrationTest {
             // 4. 주문 상태 확인
             Optional<Order> savedOrder = orderRepository.findByIdAndUser(info.orderId(), user);
             assertThat(savedOrder).isPresent();
-            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.PAID);
+            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.PLACED);
         }
     }
 
@@ -131,7 +133,9 @@ class OrderFacadeIntegrationTest {
             OrderCommand command = new OrderCommand(
                     user.getUserId(),
                     List.of(new OrderItemCommand(product.getId(), 2, 1000)),
-                    9999L // 존재하지 않는 쿠폰 ID
+                    9999L, // 존재하지 않는 쿠폰 ID
+                    "SAMSUNG",
+                    "1234-5678-9012-3456"
             );
 
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
@@ -148,7 +152,9 @@ class OrderFacadeIntegrationTest {
             OrderCommand command = new OrderCommand(
                     anotherUser.getUserId(),
                     List.of(new OrderItemCommand(product.getId(), 2, 1000)),
-                    coupon.getId()
+                    coupon.getId(),
+                    "SAMSUNG",
+                    "1234-5678-9012-3456"
             );
 
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
@@ -179,7 +185,9 @@ class OrderFacadeIntegrationTest {
             OrderCommand command = new OrderCommand(
                     user.getUserId(),
                     List.of(new OrderItemCommand(product.getId(), 100, 1000)), // 재고 10개인데 100개 주문
-                    coupon.getId()
+                    coupon.getId(),
+                    "SAMSUNG",
+                    "1234-5678-9012-3456"
             );
 
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
