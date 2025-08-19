@@ -51,7 +51,7 @@ public class UserCoupon extends BaseEntity {
 
     public void validate() {
         if (status != UserCouponStatus.AVAILABLE) {
-            throw new IllegalStateException("쿠폰을 사용할 수 없는 상태입니다.");
+            throw new IllegalStateException("이미 사용한 쿠폰입니다.");
         }
         if (expiredAt != null && expiredAt.isBefore(ZonedDateTime.now())) {
             throw new IllegalStateException("쿠폰이 만료되었습니다.");

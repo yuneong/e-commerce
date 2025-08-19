@@ -38,10 +38,6 @@ public class CouponService {
         UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 보유한 쿠폰이 아닙니다."));
 
-        if (userCoupon.getStatus() != UserCouponStatus.AVAILABLE) {
-            throw new IllegalStateException("사용할 수 없는 쿠폰입니다.");
-        }
-
         // 쿠폰 적용
         DiscountedOrderByCoupon discountedOrderByCoupon = coupon.applyDiscount(BigDecimal.valueOf(totalPrice), discountStrategyFactory);
 
