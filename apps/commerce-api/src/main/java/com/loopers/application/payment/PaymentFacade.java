@@ -28,8 +28,8 @@ public class PaymentFacade {
         return strategy.pay(payment);
     }
 
-    public void paymentCallback(PaymentCommand command) {
-        paymentService.updatePaymentStatus(command);
+    public void paymentCallback(CallbackPaymentCommand command) {
+        paymentService.updateStatusFromCallback(command);
     }
 
 }

@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
 
-    Payment findByTransactionKeyAndOrderId(String transactionKey, Long orderId);
+    Payment findByCardDetailTransactionKeyAndOrderId(String transactionKey, Long orderId);
 
 }

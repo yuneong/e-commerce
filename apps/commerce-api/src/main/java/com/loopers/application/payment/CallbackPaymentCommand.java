@@ -1,7 +1,7 @@
 package com.loopers.application.payment;
 
 
-public record PaymentCommand(
+public record CallbackPaymentCommand(
         String transactionKey, // pgId
         Long orderId,
         String cardType,

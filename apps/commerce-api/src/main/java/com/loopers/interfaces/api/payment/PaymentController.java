@@ -38,9 +38,9 @@ public class PaymentController implements PaymentV1ApiSpec {
 
     @PostMapping("/callback")
     public ApiResponse<Object> paymentCallback(
-            @RequestBody PaymentV1Dto.PaymentRequest request
+            @RequestBody PaymentV1Dto.CallbackRequest request
     ) {
-        PaymentCommand command = PaymentV1Dto.PaymentRequest.toCommand(request);
+        CallbackPaymentCommand command = PaymentV1Dto.CallbackRequest.toCommand(request);
         paymentFacade.paymentCallback(command);
 
         return ApiResponse.success();

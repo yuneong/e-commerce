@@ -19,6 +19,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
     @Override
     public Payment findByTransactionKeyAndOrderId(String transactionKey, Long orderId) {
-        return paymentJpaRepository.findByTransactionKeyAndOrderId(transactionKey, orderId);
+        return paymentJpaRepository.findByCardDetailTransactionKeyAndOrderId(transactionKey, orderId);
     }
 }

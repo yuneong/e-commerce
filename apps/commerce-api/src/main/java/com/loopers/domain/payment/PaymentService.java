@@ -66,14 +66,12 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment updatePaymentStatus(PaymentCommand command) {
+    public void updateStatusFromCallback(CallbackPaymentCommand command) {
         Payment payment = paymentRepository.findByTransactionKeyAndOrderId(command.transactionKey(), command.orderId());
 
         payment.updateStatus(PaymentStatus.valueOf(command.status()), command.reason());
 
         paymentRepository.save(payment);
-
-        return payment;
     }
 
     @Transactional
