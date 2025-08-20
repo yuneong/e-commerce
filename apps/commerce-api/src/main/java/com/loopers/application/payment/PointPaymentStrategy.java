@@ -18,6 +18,7 @@ public class PointPaymentStrategy implements PaymentStrategy {
     private final UserService userService;
     private final PointService pointService;
     private final PaymentService paymentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PaymentInfo pay(Payment payment) {
@@ -35,6 +36,10 @@ public class PointPaymentStrategy implements PaymentStrategy {
         } catch (CoreException e) {
             // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
+            eventPublisher.publishEvent(new PaymentFailedEvent(
+                    payment.getOrderId(),
+                    payment.getUserId()
+            ));
         } finally {
             savedPayment = paymentService.savePayment(payment);
         }

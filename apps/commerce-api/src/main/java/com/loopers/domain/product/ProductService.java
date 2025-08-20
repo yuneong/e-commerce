@@ -105,4 +105,14 @@ public class ProductService {
         return product.getLikeCount();
     }
 
+    @Transactional
+    public void restoreStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+
+        product.restoreStock(quantity);
+
+        productRepository.save(product);
+    }
+
 }

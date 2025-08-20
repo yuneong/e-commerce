@@ -58,4 +58,12 @@ public class UserCoupon extends BaseEntity {
         }
     }
 
+    public void restoreCoupon() {
+        if (status != UserCouponStatus.USED) {
+            throw new IllegalStateException("사용하지 않은 쿠폰은 복원할 수 없습니다.");
+        }
+        this.status = UserCouponStatus.AVAILABLE;
+        this.usedAt = null;
+    }
+
 }

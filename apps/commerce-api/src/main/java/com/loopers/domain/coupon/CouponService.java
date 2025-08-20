@@ -46,4 +46,14 @@ public class CouponService {
 
         return discountedOrderByCoupon;
     }
+
+    @Transactional
+    public void restoreUserCoupon(String userId, Long couponId) {
+        UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 보유한 쿠폰이 아닙니다."));
+
+        userCoupon.restoreCoupon();
+
+        userCouponRepository.save(userCoupon);
+    }
 }

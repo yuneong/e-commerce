@@ -18,6 +18,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PgClient pgClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Payment createPayment(ProcessPaymentCommand command) {
@@ -56,6 +57,10 @@ public class PaymentService {
     @Transactional
     public Payment requestAndSavePaymentFallback(Payment payment, Throwable t) {
         payment.updateStatus(PaymentStatus.FAILED, t.getMessage());
+        eventPublisher.publishEvent(new PaymentFailedEvent(
+                payment.getOrderId(),
+                payment.getUserId()
+        ));
 
         return paymentRepository.save(payment);
     }
@@ -75,5 +80,4 @@ public class PaymentService {
     public Payment savePayment(Payment payment) {
         return paymentRepository.save(payment);
     }
-
 }
