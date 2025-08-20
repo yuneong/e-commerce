@@ -1,10 +1,13 @@
 package com.loopers.domain.payment;
 
-import com.loopers.application.payment.PaymentCommand;
+import com.loopers.application.payment.CallbackPaymentCommand;
+import com.loopers.application.payment.ProcessPaymentCommand;
 import com.loopers.infrastructure.pg.PgClient;
-import com.loopers.infrastructure.pg.PgRequest;
-import com.loopers.infrastructure.pg.PgResponse;
+import com.loopers.infrastructure.pg.PgV1Dto;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,18 +20,35 @@ public class PaymentService {
     private final PgClient pgClient;
 
     @Transactional
-    public Payment createPayment(CreatePaymentDto dto) {
-        Payment payment = Payment.create(dto);
+    public Payment createPayment(ProcessPaymentCommand command) {
+        Payment payment = switch (command.paymentMethod()) {
+            case CARD -> Payment.createCardPayment(
+                    command.userId(),
+                    command.orderId(),
+                    command.amount(),
+                    new CardDetail(
+                            command.cardNo(),
+                            command.cardType(),
+                            null // 최초 생성 시 transactionKey 없음
+                    )
+                );
+            case POINT -> Payment.createPointPayment(
+                        command.userId(),
+                        command.orderId(),
+                        command.amount()
+                );
+        };
+
         return paymentRepository.save(payment);
     }
 
     public Payment requestAndSavePayment(Payment payment, String callbackUrl) {
-        PgRequest request = PgRequest.from(payment, callbackUrl);
-        PgResponse response = pgClient.callPayment(payment.getUserId(), request);
+        PgV1Dto.PgRequest request = PgV1Dto.PgRequest.from(payment, callbackUrl);
+        PgV1Dto.PgResponse response = pgClient.callPayment(payment.getUserId(), request);
 
-        Payment updatedPayment = payment.updateTransactionKey(response.transactionKey());
+        payment.updateTransactionKey(response.transactionKey());
 
-        return paymentRepository.save(updatedPayment);
+        return paymentRepository.save(payment);
     }
 
     @Transactional
@@ -40,6 +60,11 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         return payment;
+    }
+
+    @Transactional
+    public Payment savePayment(Payment payment) {
+        return paymentRepository.save(payment);
     }
 
 }

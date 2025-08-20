@@ -24,6 +24,14 @@ spring:
       - logging.yml
       - monitoring.yml
 
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 1000 # 연결 타임아웃 (ms)
+        read-timeout: 6000 # 읽기 타임아웃 (ms)
+#        logger-level: full # 로깅 레벨 (none, basic, headers, full)
+
 springdoc:
   use-fqn: true
   swagger-ui:
@@ -33,6 +41,14 @@ cache:
 #  스키마 변경시에 버전 업데이트 필요함
   version:
     product: v1
+
+payment:
+  callback:
+    url: http://localhost:8080/api/v1/payments/callback
+
+pg:
+  url: http://localhost:8082
+
 
 ---
 spring:

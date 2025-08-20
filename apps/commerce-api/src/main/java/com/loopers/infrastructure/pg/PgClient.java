@@ -1,9 +1,7 @@
 package com.loopers.infrastructure.pg;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "pgClient",
@@ -13,7 +11,10 @@ public interface PgClient {
 
     // 결제 요청
     @PostMapping("/api/v1/payments")
-    PgResponse callPayment(@RequestHeader("X-USER-ID") String userId, @RequestBody PgRequest request);
+    PgV1Dto.PgResponse callPayment(
+            @RequestHeader("X-USER-ID") String userId,
+            @RequestBody PgV1Dto.PgRequest request
+    );
 
     // 결제 정보 확인
 
