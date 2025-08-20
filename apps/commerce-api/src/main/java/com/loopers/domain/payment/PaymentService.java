@@ -42,11 +42,20 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
+    @CircuitBreaker(name = "pgCircuit", fallbackMethod = "requestAndSavePaymentFallback")
+    @Retry(name = "pgRetry")
     public Payment requestAndSavePayment(Payment payment, String callbackUrl) {
         PgV1Dto.PgRequest request = PgV1Dto.PgRequest.from(payment, callbackUrl);
         PgV1Dto.PgResponse response = pgClient.callPayment(payment.getUserId(), request);
 
         payment.updateTransactionKey(response.transactionKey());
+
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment requestAndSavePaymentFallback(Payment payment, Throwable t) {
+        payment.updateStatus(PaymentStatus.FAILED, t.getMessage());
 
         return paymentRepository.save(payment);
     }
