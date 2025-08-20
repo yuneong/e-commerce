@@ -20,7 +20,7 @@ public record TransactionInfo(
     Long orderId,
     CardType cardType,
     String cardNo,
-    Long amount,
+    int amount,
     TransactionStatus status,
     String reason
 ) {

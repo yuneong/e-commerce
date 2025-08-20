@@ -40,7 +40,7 @@ public class Payment {
     private String cardNo;
 
     @Column(name = "amount", nullable = false)
-    private Long amount;
+    private int amount;
 
     @Column(name = "callback_url", nullable = false)
     private String callbackUrl;
@@ -64,7 +64,7 @@ public class Payment {
         Long orderId,
         CardType cardType,
         String cardNo,
-        Long amount,
+        int amount,
         String callbackUrl
     ) {
         Payment payment = new Payment();

@@ -10,12 +10,12 @@ public record PaymentCommand(
     Long orderId,
     CardType cardType,
     String cardNo,
-    Long amount,
+    int amount,
     String callBackUrl
 ) {
 
     public void validate() {
-        if (amount <= 0L) {
+        if (amount <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "요청 금액은 0 보다 큰 정수여야 합니다.");
         }
     }

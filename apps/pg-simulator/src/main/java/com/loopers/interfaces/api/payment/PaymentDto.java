@@ -17,7 +17,7 @@ public class PaymentDto {
             Long orderId,
             CardTypeDto cardType,
             String cardNo,
-            Long amount,
+            int amount,
             String callbackUrl
     ) {
 
@@ -31,7 +31,7 @@ public class PaymentDto {
             if (!REGEX_CARD_NO.matcher(cardNo).matches()) {
                 throw new CoreException(ErrorType.BAD_REQUEST, "카드 번호는 xxxx-xxxx-xxxx-xxxx 형식이어야 합니다.");
             }
-            if (amount == null || amount <= 0) {
+            if (amount <= 0) {
                 throw new CoreException(ErrorType.BAD_REQUEST, "결제금액은 양의 정수여야 합니다.");
             }
             if (callbackUrl == null || !callbackUrl.startsWith(PREFIX_CALLBACK_URL)) {
@@ -56,7 +56,7 @@ public class PaymentDto {
             Long orderId,
             CardTypeDto cardType,
             String cardNo,
-            Long amount,
+            int amount,
             TransactionStatusResponse status,
             String reason
     ) {
