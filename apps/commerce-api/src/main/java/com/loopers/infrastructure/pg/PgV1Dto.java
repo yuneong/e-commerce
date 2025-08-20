@@ -31,4 +31,16 @@ public class PgV1Dto {
     ) {
     }
 
+    public record PgDetailResponse(
+            String transactionKey,
+            Long orderId,
+            CardType cardType,
+            String cardNo,
+            int amount,
+            PaymentStatus status,
+            String reason
+
+    ) {
+    }
+
 }

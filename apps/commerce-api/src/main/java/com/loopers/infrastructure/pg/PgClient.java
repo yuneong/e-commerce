@@ -17,6 +17,12 @@ public interface PgClient {
     );
 
     // 결제 정보 확인
+    @GetMapping("/api/v1/payments/{transactionKey}")
+    PgV1Dto.PgDetailResponse getPaymentDetail(
+            @RequestHeader("X-USER-ID") String userId,
+            @PathVariable String transactionKey
+    );
+
 
     // 주문에 엮인 결제 정보 조회
 

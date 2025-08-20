@@ -78,4 +78,17 @@ public class PaymentService {
     public Payment savePayment(Payment payment) {
         return paymentRepository.save(payment);
     }
+
+    @Transactional
+    public void updatePaymentStatusWithScheduler() {
+        paymentRepository.findByStatus(PaymentStatus.PENDING)
+                .forEach(payment -> {
+                    PgV1Dto.PgDetailResponse response = pgClient.getPaymentDetail(
+                            payment.getUserId(),
+                            payment.getCardDetail().getTransactionKey()
+                    );
+                    payment.updateStatus(response.status(), response.reason());
+                    paymentRepository.save(payment);
+                });
+    }
 }
