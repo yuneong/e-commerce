@@ -47,7 +47,7 @@ public class PaymentV1Dto {
             Long orderId,
             String cardType,
             String cardNo,
-            Long amount,
+            int amount,
             String status,
             String reason
     ) {

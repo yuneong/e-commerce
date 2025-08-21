@@ -2,10 +2,9 @@ package com.loopers.domain.payment;
 
 import com.loopers.application.payment.CallbackPaymentCommand;
 import com.loopers.application.payment.ProcessPaymentCommand;
-import com.loopers.infrastructure.pg.PgClient;
+import com.loopers.infrastructure.pg.PgService;
 import com.loopers.infrastructure.pg.PgV1Dto;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
+import com.loopers.interfaces.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final PgClient pgClient;
+    private final PgService pgService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -43,26 +42,22 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    @CircuitBreaker(name = "pgCircuit", fallbackMethod = "requestAndSavePaymentFallback")
-    @Retry(name = "pgRetry")
+    @Transactional
     public Payment requestAndSavePayment(Payment payment, String callbackUrl) {
         PgV1Dto.PgRequest request = PgV1Dto.PgRequest.from(payment, callbackUrl);
-        PgV1Dto.PgResponse response = pgClient.callPayment(payment.getUserId(), request);
 
-        payment.updateTransactionKey(response.transactionKey());
+        try {
+            ApiResponse<PgV1Dto.PgResponse> response = pgService.callPayment(payment.getUserId(), request);
+            payment.updateTransactionKey(response.data().transactionKey());
 
-        return paymentRepository.save(payment);
-    }
+            return paymentRepository.save(payment);
+        } catch (Exception e) {
+            // 실패 정책: 결제 FAILED + 주문 롤백 이벤트 발행
+            payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
+            eventPublisher.publishEvent(new PaymentFailedEvent(payment.getOrderId(), payment.getUserId()));
 
-    @Transactional
-    public Payment requestAndSavePaymentFallback(Payment payment, Throwable t) {
-        payment.updateStatus(PaymentStatus.FAILED, t.getMessage());
-        eventPublisher.publishEvent(new PaymentFailedEvent(
-                payment.getOrderId(),
-                payment.getUserId()
-        ));
-
-        return paymentRepository.save(payment);
+            return paymentRepository.save(payment);
+        }
     }
 
     @Transactional
@@ -83,12 +78,13 @@ public class PaymentService {
     public void updatePaymentStatusWithScheduler() {
         paymentRepository.findByStatus(PaymentStatus.PENDING)
                 .forEach(payment -> {
-                    PgV1Dto.PgDetailResponse response = pgClient.getPaymentDetail(
-                            payment.getUserId(),
-                            payment.getCardDetail().getTransactionKey()
-                    );
-                    payment.updateStatus(response.status(), response.reason());
-                    paymentRepository.save(payment);
+                    ApiResponse<PgV1Dto.PgDetailResponse> response = pgService.getPaymentDetail(payment);
+
+                    if (response.data().status() != PaymentStatus.PENDING) { // 폴백이면 PENDING 유지
+                        payment.updateStatus(response.data().status(), response.data().reason());
+                        paymentRepository.save(payment);
+                    }
                 });
     }
+
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class CardPaymentStrategy implements PaymentStrategy {
 
     private final PaymentService paymentService;
-    @Value("${payment.callback.url}") public static String CALLBACK_URL;
+    @Value("${payment.callback.url}") private String CALLBACK_URL;
 
     @Override
     public PaymentInfo pay(Payment payment) {

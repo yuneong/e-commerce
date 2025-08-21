@@ -39,8 +39,18 @@ public class PgV1Dto {
             int amount,
             PaymentStatus status,
             String reason
-
     ) {
+        public static PgDetailResponse from(Payment payment, PaymentStatus status, String reason) {
+            return new PgDetailResponse(
+                    payment.getCardDetail().getTransactionKey(),
+                    payment.getOrderId(),
+                    payment.getCardDetail().getCardType(),
+                    payment.getCardDetail().getCardNo(),
+                    payment.getAmount(),
+                    status,
+                    reason
+            );
+        }
     }
 
 }
