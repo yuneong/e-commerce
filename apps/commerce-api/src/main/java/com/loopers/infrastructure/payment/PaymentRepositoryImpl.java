@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RequiredArgsConstructor
@@ -28,5 +29,10 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public List<Payment> findByStatus(PaymentStatus status) {
         return paymentJpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public Optional<Payment> findById(Long paymentId) {
+        return paymentJpaRepository.findById(paymentId);
     }
 }
