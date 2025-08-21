@@ -20,6 +20,16 @@ spring:
     activate:
       on-profile: local
 
+# docker로 올릴때는 주석해야함
+datasource:
+  redis:
+    master:
+      host: localhost
+      port: 6379
+    replicas:
+      - host: localhost
+        port: 6380
+
 ---
 spring:
   config:
