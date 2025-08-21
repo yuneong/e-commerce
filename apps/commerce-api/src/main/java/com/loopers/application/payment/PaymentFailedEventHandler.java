@@ -7,6 +7,8 @@ import com.loopers.domain.payment.PaymentFailedEvent;
 import com.loopers.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -23,6 +25,7 @@ public class PaymentFailedEventHandler {
      * @param event
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handlePaymentFailedEvent(PaymentFailedEvent event) {
         // 주문 상태 실패로 변경
         Order order = orderService.updateOrderStatusToFailed(event.orderId());
