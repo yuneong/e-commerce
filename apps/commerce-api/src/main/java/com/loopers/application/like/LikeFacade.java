@@ -5,10 +5,12 @@ import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.Product;
+import com.loopers.domain.product.ProductLikeEvent;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class LikeFacade {
     private final LikeService likeService;
     private final ProductService productService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public LikeInfo like(Long productId, String userId) {
@@ -32,12 +35,14 @@ public class LikeFacade {
 
         // service
         LikeChange savedLike = likeService.like(product, user);
-        Long totalLikeCount = savedLike.changed()
-                ? productService.updateLikeCount(product.getId(), "like")
-                : productService.getLikeCount(product.getId());
+
+        // changed 가 true 면 이벤트 발행
+        if(savedLike.changed()){
+            eventPublisher.publishEvent(ProductLikeEvent.of(product.getId(), user.getUserId(), "like"));
+        }
 
         // info
-        return LikeInfo.of(savedLike.like().getLikedYn(), totalLikeCount);
+        return LikeInfo.of(savedLike.like().getLikedYn());
     }
 
     @Transactional
@@ -48,12 +53,14 @@ public class LikeFacade {
 
         // service
         LikeChange savedLike = likeService.unLike(product, user);
-        Long totalLikeCount = savedLike.changed()
-                ? productService.updateLikeCount(product.getId(), "unlike")
-                : productService.getLikeCount(product.getId());
+
+        // changed 가 true 면 이벤트 발행
+        if(savedLike.changed()){
+            eventPublisher.publishEvent(ProductLikeEvent.of(product.getId(), user.getUserId(), "unlike"));
+        }
 
         // info
-        return LikeInfo.of(savedLike.like().getLikedYn(), totalLikeCount);
+        return LikeInfo.of(savedLike.like().getLikedYn());
     }
 
     public LikeListInfo getLikeProducts(String userId) {
