@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -381,16 +382,18 @@ class PaymentServiceIntegrationTest {
             assertThat(pg.getCallCount()).isEqualTo(3);
             assertThat(failed.getStatus()).isEqualTo(PaymentStatus.FAILED);
 
-            Payment reloaded = paymentRepository.findById(failed.getId()).orElseThrow();
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.FAILED);
+            await().untilAsserted(() -> {
+                Payment reloaded = paymentRepository.findById(failed.getId()).orElseThrow();
+                assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.FAILED);
 
-            // 이벤트 1건 발행 확인
-            assertThat(eventListener.get()).hasSize(1);
-            assertThat(eventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
-            assertThat(eventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
+                // 이벤트 1건 발행 확인
+                assertThat(eventListener.get()).hasSize(1);
+                assertThat(eventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
+                assertThat(eventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
 
-            Order order = orderRepository.findById(reloaded.getOrderId()).orElseThrow();
-            assertThat(order.getStatus()).isEqualTo(OrderStatus.FAILED);
+                Order order = orderRepository.findById(reloaded.getOrderId()).orElseThrow();
+                assertThat(order.getStatus()).isEqualTo(OrderStatus.FAILED);
+            });
         }
     }
 
