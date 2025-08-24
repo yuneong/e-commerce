@@ -5,8 +5,6 @@ import com.loopers.domain.coupon.*;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderRepository;
 import com.loopers.domain.order.OrderStatus;
-import com.loopers.domain.point.Point;
-import com.loopers.domain.point.PointRepository;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.Gender;
@@ -42,9 +40,6 @@ class OrderFacadeIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private PointRepository pointRepository;
-
-    @Autowired
     private CouponRepository couponRepository;
 
     @Autowired
@@ -60,7 +55,6 @@ class OrderFacadeIntegrationTest {
     private Product product;
     private Coupon coupon;
     private UserCoupon userCoupon;
-    private Point point;
 
     @BeforeEach
     void setUp() {
@@ -70,8 +64,6 @@ class OrderFacadeIntegrationTest {
 
         coupon = couponRepository.save(new Coupon("10% 할인 쿠폰", CouponType.RATE, 10, 10, ZonedDateTime.now().plusDays(1)));
         userCoupon = userCouponRepository.save(UserCoupon.create(user.getUserId(), coupon.getId(), coupon.getExpiredAt()));
-
-        point = pointRepository.save(Point.create(user).charge(5000L));
     }
 
     @AfterEach
@@ -110,14 +102,10 @@ class OrderFacadeIntegrationTest {
             Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
             assertThat(updatedProduct.getStock()).isEqualTo(8);
 
-            // 3. 포인트 차감 확인 (기존 5000 - 1800 = 3200)
-            Point updatedPoint = pointRepository.findByUser(user);
-            assertThat(updatedPoint.getBalance()).isEqualTo(3200L);
-
-            // 4. 주문 상태 확인
+            // 3. 주문 상태 확인
             Optional<Order> savedOrder = orderRepository.findByIdAndUser(info.orderId(), user);
             assertThat(savedOrder).isPresent();
-            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.PAID);
+            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.COMPLETE);
         }
     }
 
@@ -137,7 +125,7 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalArgumentException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE, point.getBalance());
+            assertRollbackState(UserCouponStatus.AVAILABLE);
         }
 
         @DisplayName("유저가 해당 쿠폰을 보유하지 않으면 주문은 실패하고 롤백된다.")
@@ -154,7 +142,7 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalArgumentException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE, point.getBalance());
+            assertRollbackState(UserCouponStatus.AVAILABLE);
         }
 
         @DisplayName("쿠폰이 사용 불가능 상태일 경우 주문은 실패하고 롤백된다.")
@@ -169,7 +157,7 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalStateException.class);
 
-            assertRollbackState(UserCouponStatus.USED, point.getBalance());
+            assertRollbackState(UserCouponStatus.USED);
         }
 
         @DisplayName("재고가 부족할 경우 주문은 실패하고 롤백된다.")
@@ -185,25 +173,10 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalStateException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE, point.getBalance());
+            assertRollbackState(UserCouponStatus.AVAILABLE);
         }
 
-        @DisplayName("포인트가 부족할 경우 주문은 실패하고 롤백된다.")
-        @Test
-        void fail_insufficientPoint() {
-            // given
-            point.use(4900L); // 남은 포인트: 100
-            Point savedPoint = pointRepository.save(point);
-
-            OrderCommand command = buildValidCommand();
-
-            assertThatThrownBy(() -> orderFacade.placeOrder(command))
-                    .isInstanceOf(IllegalStateException.class);
-
-            assertRollbackState(UserCouponStatus.AVAILABLE, savedPoint.getBalance());
-        }
-
-        private void assertRollbackState(UserCouponStatus expectedCouponStatus, long expectedPointBalance) {
+        private void assertRollbackState(UserCouponStatus expectedCouponStatus) {
             // 주문이 저장되지 않아야 함
             List<Order> orders = orderRepository.findByUser(user);
             assertThat(orders).isEmpty();
@@ -211,10 +184,6 @@ class OrderFacadeIntegrationTest {
             // 재고 차감 없어야 함
             Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
             assertThat(updatedProduct.getStock()).isEqualTo(10);
-
-            // 포인트 차감 없어야 함
-            Point updatedPoint = pointRepository.findByUser(user);
-            assertThat(updatedPoint.getBalance()).isEqualTo(expectedPointBalance);
 
             // 쿠폰 상태 검증
             UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(user.getUserId(), coupon.getId()).orElse(null);

@@ -1,20 +1,19 @@
 package com.loopers.domain.order;
 
 
+import lombok.Getter;
+
+@Getter
 public enum OrderStatus {
 
-    PLACED("주문 접수"),
-    PAID("결제 완료"),
-    CANCELED("주문 취소");
+    PENDING("주문 생성"),
+    COMPLETE("주문 성공"),
+    FAILED("주문 실패");
 
     private final String description;
 
     OrderStatus(String description) {
         this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
 }

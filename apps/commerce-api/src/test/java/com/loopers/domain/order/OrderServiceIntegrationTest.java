@@ -144,7 +144,7 @@ class OrderServiceIntegrationTest {
     @Nested
     class saveOrder {
 
-        @DisplayName("정상적으로 저장되고 상태가 PAID로 변경된다.")
+        @DisplayName("정상적으로 저장되고 상태가 COMPLETE로 변경된다.")
         @Test
         void saveOrder_success() {
             // given
@@ -170,7 +170,7 @@ class OrderServiceIntegrationTest {
 
             // then
             assertAll(
-                    () -> assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.PAID),
+                    () -> assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.COMPLETE),
                     () -> assertThat(savedOrder.getId()).isNotNull()
             );
         }

@@ -12,15 +12,12 @@ public record OrderInfo(
         int totalPrice,
         OrderStatus orderStatus,
         List<OrderItemInfo> items,
-        ExternalSendInfo externalSendInfo,
         Long couponId
 ) {
 
     public static OrderInfo from(
-            Order order,
-            ExternalSendInfo externalSendInfo
+            Order order
     ) {
-
         List<OrderItemInfo> itemInfos = order.getOrderItems().stream()
                 .map(item -> new OrderItemInfo(
                         item.getProduct().getId(),
@@ -35,19 +32,14 @@ public record OrderInfo(
                 order.getTotalPrice().intValue(),
                 order.getStatus(),
                 itemInfos,
-                externalSendInfo,
                 order.getCouponId()
         );
     }
 
     public static List<OrderInfo> from(List<Order> orders) {
         return orders.stream()
-                .map(order -> from(order, null))
+                .map(OrderInfo::from)
                 .toList();
-    }
-
-    public static OrderInfo from(Order order) {
-        return from(order, null);
     }
 
 }

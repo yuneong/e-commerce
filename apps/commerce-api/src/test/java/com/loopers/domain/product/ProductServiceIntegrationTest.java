@@ -278,7 +278,7 @@ class ProductServiceIntegrationTest {
                     .toList();
 
             // when
-            List<Product> foundProducts = productService.getProductsByIds(productIds);
+            List<Product> foundProducts = productService.getProductsByIdsWithLock(productIds);
 
             // then
             assertThat(foundProducts).hasSize(3);
@@ -294,7 +294,7 @@ class ProductServiceIntegrationTest {
             List<Long> productIds = List.of();
 
             // when
-            List<Product> products = productService.getProductsByIds(productIds);
+            List<Product> products = productService.getProductsByIdsWithLock(productIds);
 
             // then
             assertThat(products).isEmpty();
@@ -312,7 +312,7 @@ class ProductServiceIntegrationTest {
             List<Long> mixedIds = List.of(productIds.get(0), 999L, productIds.get(1));
 
             // when
-            List<Product> found = productService.getProductsByIds(mixedIds);
+            List<Product> found = productService.getProductsByIdsWithLock(mixedIds);
 
             // then
             assertThat(found).hasSize(2);

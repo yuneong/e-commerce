@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 
-@Tag(name = "Order V1 API", description = "주문/결제(Order) API 입니다.")
+@Tag(name = "Order V1 API", description = "주문(Order) API 입니다.")
 public interface OrderV1ApiSpec {
 
     @Operation(
         summary = "주문 요청",
-        description = "유저가 상품을 주문하고, 성공하면 주문 ID를 반환합니다."
+        description = "상품에 대한 주문을 생성을 처리합니다. (상품 차감/쿠폰 사용 포함)"
     )
     ApiResponse<OrderV1Dto.OrderResponse> placeOrder(
             @Parameter(

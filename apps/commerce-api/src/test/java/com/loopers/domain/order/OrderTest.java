@@ -40,7 +40,7 @@ class OrderTest {
                     () -> assertEquals(user, order.getUser()),
                     () -> assertEquals(2, order.getOrderItems().size()),
                     () -> assertEquals(BigDecimal.valueOf(1500), order.getTotalPrice()),
-                    () -> assertEquals(OrderStatus.PLACED, order.getStatus()),
+                    () -> assertEquals(OrderStatus.PENDING, order.getStatus()),
                     () -> assertNotNull(order.getPaidAt())
             );
         }
@@ -129,10 +129,10 @@ class OrderTest {
             Order order = new Order();
 
             // when
-            order.updateOrderStatus(OrderStatus.PAID);
+            order.updateOrderStatus(OrderStatus.COMPLETE);
 
             // then
-            assertEquals(OrderStatus.PAID, order.getStatus());
+            assertEquals(OrderStatus.COMPLETE, order.getStatus());
         }
 
         @DisplayName("null 상태로 업데이트하면 예외가 발생한다.")

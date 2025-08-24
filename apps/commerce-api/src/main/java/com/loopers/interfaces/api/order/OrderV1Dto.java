@@ -1,7 +1,6 @@
 package com.loopers.interfaces.api.order;
 
 
-import com.loopers.application.order.ExternalSendInfo;
 import com.loopers.application.order.OrderCommand;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.application.order.OrderItemCommand;
@@ -30,8 +29,7 @@ public class OrderV1Dto {
             String userId,
             int totalPrice,
             OrderStatus orderStatus,
-            List<OrderItemV1Dto.OrderItemResponse> items,
-            ExternalSendInfo externalSendInfo
+            List<OrderItemV1Dto.OrderItemResponse> items
     ) {
         public static OrderResponse from(OrderInfo info) {
             List<OrderItemV1Dto.OrderItemResponse> itemResponses = info.items().stream()
@@ -43,8 +41,7 @@ public class OrderV1Dto {
                     info.userId(),
                     info.totalPrice(),
                     info.orderStatus(),
-                    itemResponses,
-                    info.externalSendInfo()
+                    itemResponses
             );
         }
 
@@ -53,7 +50,6 @@ public class OrderV1Dto {
     public record OrderListResponse(
             List<OrderResponse> orders
     ) {
-
         public static OrderListResponse from(List<OrderInfo> infos) {
             List<OrderResponse> responses = infos.stream()
                     .map(OrderResponse::from)

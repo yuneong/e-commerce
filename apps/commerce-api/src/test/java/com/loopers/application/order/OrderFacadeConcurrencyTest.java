@@ -3,9 +3,6 @@ package com.loopers.application.order;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandRepository;
 import com.loopers.domain.coupon.*;
-import com.loopers.domain.point.Point;
-import com.loopers.domain.point.PointRepository;
-import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.Gender;
@@ -42,12 +39,6 @@ class OrderFacadeConcurrencyTest {
     private UserRepository userRepository;
 
     @Autowired
-    private PointRepository pointRepository;
-
-    @Autowired
-    private PointService pointService;
-
-    @Autowired
     private CouponRepository couponRepository;
 
     @Autowired
@@ -63,15 +54,12 @@ class OrderFacadeConcurrencyTest {
     private DatabaseCleanUp databaseCleanUp;
 
     private List<User> users;
-    private List<Point> points;
     private Product product;
     private Coupon coupon;
-    private UserCoupon userCoupon;
 
     @BeforeEach
     void setUp() {
         users = new ArrayList<>();
-        points = new ArrayList<>();
 
         for (int i = 1; i <= 5; i++) {
             String userId = "user" + i;
@@ -79,10 +67,6 @@ class OrderFacadeConcurrencyTest {
 
             User user = userRepository.save(User.create(userId, Gender.F, "1999-08-21", email));
             users.add(user);
-
-            Point point = pointRepository.save(Point.create(user));
-            pointService.charge(user, 5000L);
-            points.add(point);
         }
 
         Brand brand = brandRepository.save(TestFixture.createBrand());
@@ -92,7 +76,7 @@ class OrderFacadeConcurrencyTest {
                 new Coupon("200원 쿠폰", CouponType.FIXED, 10, 200, ZonedDateTime.now().plusDays(1))
         );
 
-        userCoupon = userCouponRepository.save(
+        userCouponRepository.save(
                 UserCoupon.create(users.get(0).getUserId(), coupon.getId(), coupon.getExpiredAt())
         );
     }
@@ -147,46 +131,6 @@ class OrderFacadeConcurrencyTest {
                 .filter(o -> o.couponId() != null && o.couponId().equals(couponId))
                 .count();
         assertThat(couponUsedCount).isEqualTo(1); // 정확히 한 번만 사용되어야 함
-    }
-
-    @DisplayName("동일 유저가 동시에 여러 주문을 수행해도 포인트는 정확히 차감된다. (비관적 락)")
-    @Test
-    void point_should_be_deducted_correctly_concurrently() throws InterruptedException {
-        int threadCount = 5;
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        String userId = users.get(0).getUserId();
-        Long productId = product.getId();
-        int orderAmount = 1000; // 주문당 포인트 사용액
-        long initialPoint = 5000L;
-
-        for (int i = 0; i < threadCount; i++) {
-            executor.submit(() -> {
-                try {
-                    OrderCommand command = createOrderCommand(userId, productId, null); // 쿠폰 없음
-                    orderFacade.placeOrder(command);
-
-                    Point currentPoint = pointRepository.findByUser(users.get(0));
-                    System.out.printf("👛[%s] 차감 후 잔액: %d%n", Thread.currentThread().getName(), currentPoint.getBalance());
-                } catch (Exception e) {
-                    System.out.printf("👛[%s] 포인트 차감 실패: %s%n", Thread.currentThread().getName(), e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-
-        latch.await();
-
-        Point point = pointRepository.findByUser(users.get(0));
-        long usedPoint = initialPoint - point.getBalance();
-
-        assertAll(
-                () -> assertThat(point.getBalance()).isLessThanOrEqualTo(initialPoint),
-                () -> assertThat(usedPoint).isEqualTo(orderAmount * threadCount),
-                () -> assertThat(point.getUser().getUserId()).isEqualTo(userId)
-        );
     }
 
     @DisplayName("동일 상품에 대해 동시에 여러 주문을 해도 재고는 정확히 차감된다. (비관적 락)")

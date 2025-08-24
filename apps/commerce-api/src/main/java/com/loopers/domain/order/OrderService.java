@@ -27,7 +27,7 @@ public class OrderService {
     @Transactional
     public Order saveOrder(Order order) {
         // 주문 상태 변경
-        order.updateOrderStatus(OrderStatus.PAID);
+        order.updateOrderStatus(OrderStatus.COMPLETE);
 
         return orderRepository.save(order);
     }
@@ -39,6 +39,16 @@ public class OrderService {
     public Order getOrderDetail(Long orderId, User user) {
         return orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. orderId: " + orderId));
+    }
+
+    @Transactional
+    public Order updateOrderStatusToFailed(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. orderId: " + orderId));
+
+        order.updateOrderStatus(OrderStatus.FAILED);
+
+        return orderRepository.save(order);
     }
 
 }

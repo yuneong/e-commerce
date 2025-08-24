@@ -68,7 +68,7 @@ public class ProductService {
     }
 
     @Transactional
-    public List<Product> getProductsByIds(List<Long> productIds) {
+    public List<Product> getProductsByIdsWithLock(List<Long> productIds) {
         // repository
         return productRepository.findAllWithLock(productIds);
     }
@@ -76,11 +76,10 @@ public class ProductService {
     @Transactional
     public void checkAndDecreaseStock(List<OrderItem> orderItems) {
         for (OrderItem orderItem : orderItems) {
-            Long productId = orderItem.getProduct().getId();
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId)); // 영속성 보장을 위함
-
+            Product product = orderItem.getProduct();
             product.decreaseStock(orderItem.getQuantity());
+
+            productRepository.save(product); // 재고 차감 후 저장
         }
     }
 
@@ -104,6 +103,16 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
 
         return product.getLikeCount();
+    }
+
+    @Transactional
+    public void restoreStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+
+        product.restoreStock(quantity);
+
+        productRepository.save(product);
     }
 
 }
