@@ -15,9 +15,6 @@ import java.time.ZonedDateTime;
 public class UserCoupon extends BaseEntity {
 
     private String userId;
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "coupon_id")
-//    private Coupon coupon;
     private Long couponId;
     private UserCouponStatus status = UserCouponStatus.AVAILABLE;
     private ZonedDateTime usedAt;

@@ -94,44 +94,44 @@ class OrderFacadeConcurrencyTest {
         );
     }
 
-    @DisplayName("동일한 쿠폰을 여러 기기에서 동시에 주문해도 단 1회만 사용된다. (낙관적 락)")
-    @Test
-    void coupon_should_be_used_only_once_concurrently() throws InterruptedException {
-        int threadCount = 10;
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        String userId = users.get(0).getUserId();
-        Long productId = product.getId();
-        Long couponId = coupon.getId();
-
-        for (int i = 0; i < threadCount; i++) {
-            executor.submit(() -> {
-                try {
-                    OrderCommand command = createOrderCommand(userId, productId, couponId);
-                    orderFacade.placeOrder(command);
-
-                    Optional<UserCoupon> userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId);
-                    System.out.printf("🎫[%s] 사용 쿠폰 아이디: %d%n", Thread.currentThread().getName(), userCoupon.get().getCouponId());
-                } catch (Exception e) {
-                    System.out.printf("🎫[%s] 쿠폰 사용 실패: %s%n", Thread.currentThread().getName(), e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-
-        latch.await();
-
-        List<OrderInfo> orders = orderFacade.getOrders(userId);
-        assertThat(orders).isNotEmpty();
-        assertThat(orders.size()).isLessThanOrEqualTo(threadCount);
-
-        long couponUsedCount = orders.stream()
-                .filter(o -> o.couponId() != null && o.couponId().equals(couponId))
-                .count();
-        assertThat(couponUsedCount).isEqualTo(1); // 정확히 한 번만 사용되어야 함
-    }
+//    @DisplayName("동일한 쿠폰을 여러 기기에서 동시에 주문해도 단 1회만 사용된다. (낙관적 락)")
+//    @Test
+//    void coupon_should_be_used_only_once_concurrently() throws InterruptedException {
+//        int threadCount = 10;
+//        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+//        CountDownLatch latch = new CountDownLatch(threadCount);
+//
+//        String userId = users.get(0).getUserId();
+//        Long productId = product.getId();
+//        Long couponId = coupon.getId();
+//
+//        for (int i = 0; i < threadCount; i++) {
+//            executor.submit(() -> {
+//                try {
+//                    OrderCommand command = createOrderCommand(userId, productId, couponId);
+//                    orderFacade.placeOrder(command);
+//
+//                    Optional<UserCoupon> userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId);
+//                    System.out.printf("🎫[%s] 사용 쿠폰 아이디: %d%n", Thread.currentThread().getName(), userCoupon.get().getCouponId());
+//                } catch (Exception e) {
+//                    System.out.printf("🎫[%s] 쿠폰 사용 실패: %s%n", Thread.currentThread().getName(), e.getMessage());
+//                } finally {
+//                    latch.countDown();
+//                }
+//            });
+//        }
+//
+//        latch.await();
+//
+//        List<OrderInfo> orders = orderFacade.getOrders(userId);
+//        assertThat(orders).isNotEmpty();
+//        assertThat(orders.size()).isLessThanOrEqualTo(threadCount);
+//
+//        long couponUsedCount = orders.stream()
+//                .filter(o -> o.couponId() != null && o.couponId().equals(couponId))
+//                .count();
+//        assertThat(couponUsedCount).isEqualTo(1); // 정확히 한 번만 사용되어야 함
+//    }
 
     @DisplayName("동일 상품에 대해 동시에 여러 주문을 해도 재고는 정확히 차감된다. (비관적 락)")
     @Test

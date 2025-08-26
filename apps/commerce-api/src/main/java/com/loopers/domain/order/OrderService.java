@@ -17,17 +17,10 @@ public class OrderService {
     public Order createOrder(
             User user,
             List<OrderItem> items,
-            DiscountedOrderByCoupon discountedOrderByCoupon
+            int totalPrice,
+            Long couponId
     ) {
-        Order order = Order.place(user, items, discountedOrderByCoupon);
-
-        return orderRepository.save(order);
-    }
-
-    @Transactional
-    public Order saveOrder(Order order) {
-        // 주문 상태 변경
-        order.updateOrderStatus(OrderStatus.COMPLETE);
+        Order order = Order.place(user, items, totalPrice, couponId);
 
         return orderRepository.save(order);
     }

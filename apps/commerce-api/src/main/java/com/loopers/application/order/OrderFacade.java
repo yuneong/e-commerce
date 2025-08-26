@@ -1,7 +1,6 @@
 package com.loopers.application.order;
 
 import com.loopers.domain.coupon.CouponService;
-import com.loopers.domain.order.DiscountedOrderByCoupon;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
@@ -33,20 +32,23 @@ public class OrderFacade {
                 .stream().map(OrderItemCommand::productId).toList());
         List<OrderItem> items = OrderItemFactory.createFrom(command.items(), products);
 
+        // 주문 상품 금액 계산
+        int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
+
         // 상품 재고 차감
         productService.checkAndDecreaseStock(items);
 
-        // 쿠폰 조회 및 적용, 사용
-        DiscountedOrderByCoupon discountedOrderByCoupon = couponService.useCoupon(command.userId(), command.couponId(), items);
+        // 쿠폰 할인 금액 조회
+        int discountAmount = couponService.calculateDiscountAmount(command.userId(), command.couponId(), itemsPrice);
+
+        // 최종 금액 계산
+        int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
         // 주문 생성
-        Order order = orderService.createOrder(user, items, discountedOrderByCoupon);
-
-        // 주문 저장
-        Order savedOrder = orderService.saveOrder(order);
+        Order order = orderService.createOrder(user, items, totalPrice, command.couponId());
 
         // domain -> info
-        return OrderInfo.from(savedOrder);
+        return OrderInfo.from(order);
     }
 
     @Transactional(readOnly = true)
