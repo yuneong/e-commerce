@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -85,7 +86,15 @@ public class ProductService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Retryable(
+            retryFor = {
+                    org.springframework.dao.OptimisticLockingFailureException.class,
+                    jakarta.persistence.OptimisticLockException.class
+            },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 10, multiplier = 2.0, maxDelay = 200)
+    )
     public Long updateLikeCount(Long productId, String likeType) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));

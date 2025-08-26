@@ -5,7 +5,7 @@ import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.Product;
-import com.loopers.domain.product.ProductLikeEvent;
+import com.loopers.domain.product.event.ProductLikeEvent;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
