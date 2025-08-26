@@ -2,6 +2,8 @@ package com.loopers.domain.payment;
 
 import com.loopers.application.payment.CallbackPaymentCommand;
 import com.loopers.application.payment.ProcessPaymentCommand;
+import com.loopers.domain.payment.event.PaymentFailedEvent;
+import com.loopers.domain.payment.event.PaymentSucceededEvent;
 import com.loopers.infrastructure.pg.PgService;
 import com.loopers.infrastructure.pg.PgV1Dto;
 import com.loopers.interfaces.api.ApiResponse;
@@ -45,19 +47,30 @@ public class PaymentService {
     @Transactional
     public Payment requestAndSavePayment(Payment payment, String callbackUrl) {
         PgV1Dto.PgRequest request = PgV1Dto.PgRequest.from(payment, callbackUrl);
+        Payment savedPayment = null;
 
         try {
             ApiResponse<PgV1Dto.PgResponse> response = pgService.callPayment(payment.getUserId(), request);
             payment.updateTransactionKey(response.data().transactionKey());
 
-            return paymentRepository.save(payment);
+            // 성공 시
+            payment.updateStatus(PaymentStatus.SUCCESS, null);
+            eventPublisher.publishEvent(new PaymentSucceededEvent(
+                    payment.getOrderId(),
+                    payment.getUserId()
+            ));
         } catch (Exception e) {
-            // 실패 정책: 결제 FAILED + 주문 롤백 이벤트 발행
+            // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
-            eventPublisher.publishEvent(new PaymentFailedEvent(payment.getOrderId(), payment.getUserId()));
-
-            return paymentRepository.save(payment);
+            eventPublisher.publishEvent(new PaymentFailedEvent(
+                    payment.getOrderId(),
+                    payment.getUserId()
+            ));
+        } finally {
+            savedPayment = paymentRepository.save(payment);
         }
+
+        return savedPayment;
     }
 
     @Transactional

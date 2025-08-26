@@ -8,6 +8,8 @@ import com.loopers.domain.brand.BrandRepository;
 import com.loopers.domain.coupon.*;
 import com.loopers.domain.order.*;
 import com.loopers.domain.order.Order;
+import com.loopers.domain.payment.event.PaymentFailedEvent;
+import com.loopers.domain.payment.event.PaymentSucceededEvent;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.User;
@@ -75,7 +77,8 @@ class PaymentServiceIntegrationTest {
     @Autowired PaymentService paymentService;
     @Autowired PaymentRepository paymentRepository;
     @Autowired @Qualifier("testPgClient") TestPgClient pg; // 테스트 더블
-    @Autowired TestEventListener eventListener;
+    @Autowired TestSucceededEventListener succeededEventListener;
+    @Autowired TestFailedEventListener failedEventListener;
     @Autowired private DatabaseCleanUp databaseCleanUp;
     private String callbackUrl = "http://localhost:8080/api/v1/payments/callback";
     @Autowired private OrderRepository orderRepository;
@@ -97,9 +100,15 @@ class PaymentServiceIntegrationTest {
         }
 
         @Bean
-        public TestEventListener eventListener() {
-            return new TestEventListener();
+        public TestSucceededEventListener succeededEventListener() {
+            return new TestSucceededEventListener();
         }
+
+        @Bean
+        public TestFailedEventListener failedEventListener() {
+            return new TestFailedEventListener();
+        }
+
     }
 
     static class TestPgClient implements PgClient {
@@ -186,15 +195,24 @@ class PaymentServiceIntegrationTest {
         }
     }
 
-    static class TestEventListener {
-        private final List<PaymentFailedEvent> events = new CopyOnWriteArrayList<>(); // PaymentFailedEvent 이벤트 목록
+    static class TestSucceededEventListener {
+        private final List<PaymentSucceededEvent> events = new CopyOnWriteArrayList<>();
 
         @org.springframework.context.event.EventListener
-        public void on(PaymentFailedEvent e) { events.add(e); } // 이벤트 리스너 메서드
+        public void on(PaymentSucceededEvent e) { events.add(e); }
 
-        public List<PaymentFailedEvent> get() { return events; } // 이벤트 목록 반환
+        public List<PaymentSucceededEvent> get() { return events; }
+        public void clear() { events.clear(); }
+    }
 
-        public void clear() { events.clear(); } // 이벤트 목록 초기화
+    static class TestFailedEventListener {
+        private final List<PaymentFailedEvent> events = new CopyOnWriteArrayList<>();
+
+        @org.springframework.context.event.EventListener
+        public void on(PaymentFailedEvent e) { events.add(e); }
+
+        public List<PaymentFailedEvent> get() { return events; }
+        public void clear() { events.clear(); }
     }
 
     private Payment newCardPending() {
@@ -219,7 +237,8 @@ class PaymentServiceIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        eventListener.clear();
+        failedEventListener.clear();
+        succeededEventListener.clear();
         pg.reset();
 
         // 데이터 세팅
@@ -242,9 +261,10 @@ class PaymentServiceIntegrationTest {
 
         Coupon coupon = couponRepository.save(new Coupon("10% 할인 쿠폰", CouponType.RATE, 10, 10, ZonedDateTime.now()));
         userCouponRepository.save(UserCoupon.create(savedUser.getUserId(), coupon.getId(), ZonedDateTime.now().plusDays(2)));
-        DiscountedOrderByCoupon discountedOrderByCoupon = couponService.useCoupon(savedUser.getUserId(), coupon.getId(), items);
+        int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
+        int discountAmount = couponService.calculateDiscountAmount(savedUser.getUserId(), coupon.getId(), itemsPrice);
 
-        orderService.createOrder(savedUser, items, discountedOrderByCoupon);
+        orderService.createOrder(savedUser, items, discountAmount, coupon.getId());
     }
 
     @AfterEach
@@ -337,23 +357,37 @@ class PaymentServiceIntegrationTest {
     class RequestAndSavePayment {
 
         @Test
-        @DisplayName("성공 - PG 정상 응답 → 트랜잭션키 저장")
+        @DisplayName("성공 - PG 정상 응답 → 트랜잭션키 저장 & SUCCESS 저장 & 이벤트 발행(주문 상태 PAID & 쿠폰 차감)")
         void success_requestAndSavePayment() {
             Payment payment = newCardPending();
 
             Payment updated = paymentService.requestAndSavePayment(payment, callbackUrl);
 
             assertThat(updated.getCardDetail().getTransactionKey()).startsWith("TX-");
+
             Payment reloaded = paymentRepository.findById(updated.getId()).orElseThrow();
             assertThat(reloaded.getCardDetail().getTransactionKey())
                     .isEqualTo(updated.getCardDetail().getTransactionKey());
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.PENDING);
+
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
             assertThat(pg.getCallCount()).isEqualTo(1);
-            assertThat(eventListener.get()).isEmpty();
+
+            await().untilAsserted(() -> {
+                // 이벤트 발행 확인
+                assertThat(succeededEventListener.get()).hasSize(1);
+                assertThat(succeededEventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
+                assertThat(succeededEventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
+
+                Order order = orderRepository.findById(reloaded.getOrderId()).orElseThrow();
+                assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+
+                UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(payment.getUserId(), order.getCouponId()).orElseThrow();
+                assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
+            });
         }
 
         @Test
-        @DisplayName("성공 - 2회 실패 후 성공(재시도 동작)")
+        @DisplayName("성공 - PG 2회 실패 후 성공(재시도 동작)")
         void success_whenRetry() {
             pg.setFailsThenSuccess(2);  // 앞 2회 실패 후 3번째 성공
             Payment payment = newCardPending();
@@ -367,12 +401,26 @@ class PaymentServiceIntegrationTest {
             assertThat(reloaded.getCardDetail().getTransactionKey())
                     .isEqualTo(updated.getCardDetail().getTransactionKey());
 
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.PENDING);
-            assertThat(eventListener.get()).isEmpty();
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+
+            await().untilAsserted(() -> {
+                // 이벤트 발행 확인
+                assertThat(succeededEventListener.get()).hasSize(1);
+                assertThat(succeededEventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
+                assertThat(succeededEventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
+
+                Order order = orderRepository.findById(reloaded.getOrderId()).orElseThrow();
+                assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+
+                UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(payment.getUserId(), order.getCouponId()).orElseThrow();
+                assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
+            });
+
+
         }
 
         @Test
-        @DisplayName("실패 - 재시도 모두 실패 → FAILED 저장 & 이벤트 발행")
+        @DisplayName("실패 - 재시도 모두 실패 → FAILED 저장 & 이벤트 발행(주문 상태 FAILED & 상품 재고 복원)")
         void alwaysFail_thenFailedAndEvent() {
             pg.setAlwaysFail(true);
             Payment payment = newCardPending();
@@ -387,12 +435,16 @@ class PaymentServiceIntegrationTest {
                 assertThat(reloaded.getStatus()).isEqualTo(PaymentStatus.FAILED);
 
                 // 이벤트 1건 발행 확인
-                assertThat(eventListener.get()).hasSize(1);
-                assertThat(eventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
-                assertThat(eventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
+                assertThat(failedEventListener.get()).hasSize(1);
+                assertThat(failedEventListener.get().getFirst().orderId()).isEqualTo(payment.getOrderId());
+                assertThat(failedEventListener.get().getFirst().userId()).isEqualTo(payment.getUserId());
 
                 Order order = orderRepository.findById(reloaded.getOrderId()).orElseThrow();
                 assertThat(order.getStatus()).isEqualTo(OrderStatus.FAILED);
+
+                // 쿠폰 사용 안된거 확인용
+                UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(payment.getUserId(), order.getCouponId()).orElseThrow();
+                assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.AVAILABLE);
             });
         }
     }

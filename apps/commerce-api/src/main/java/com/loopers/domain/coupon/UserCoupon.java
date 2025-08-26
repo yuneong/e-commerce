@@ -42,6 +42,8 @@ public class UserCoupon extends BaseEntity {
     public void use() {
         validate();
 
+        if (this.status == UserCouponStatus.USED) return;
+
         this.status = UserCouponStatus.USED;
         this.usedAt = ZonedDateTime.now();
     }

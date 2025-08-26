@@ -1,6 +1,8 @@
 package com.loopers.domain.coupon;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +34,19 @@ public class CouponService {
     }
 
     @Transactional
-    public void restoreUserCoupon(String userId, Long couponId) {
+    @Retryable(
+            retryFor = {
+                    org.springframework.dao.OptimisticLockingFailureException.class,
+                    jakarta.persistence.OptimisticLockException.class
+            },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 10, multiplier = 2.0, maxDelay = 200)
+    )
+    public void useCoupon(String userId, Long couponId) {
         UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 보유한 쿠폰이 아닙니다."));
 
-        userCoupon.restoreCoupon();
+        userCoupon.use();
 
         userCouponRepository.save(userCoupon);
     }

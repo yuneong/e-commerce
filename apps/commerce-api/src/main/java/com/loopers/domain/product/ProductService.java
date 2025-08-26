@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,6 +108,14 @@ public class ProductService {
     }
 
     @Transactional
+    @Retryable(
+            retryFor = {
+                    org.springframework.dao.OptimisticLockingFailureException.class,
+                    jakarta.persistence.OptimisticLockException.class
+            },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 10, multiplier = 2.0, maxDelay = 200)
+    )
     public void restoreStock(Long productId, int quantity) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));

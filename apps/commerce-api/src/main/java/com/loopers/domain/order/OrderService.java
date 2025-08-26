@@ -35,11 +35,11 @@ public class OrderService {
     }
 
     @Transactional
-    public Order updateOrderStatusToFailed(Long orderId) {
+    public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. orderId: " + orderId));
 
-        order.updateOrderStatus(OrderStatus.FAILED);
+        order.updateOrderStatus(status);
 
         return orderRepository.save(order);
     }
