@@ -29,8 +29,7 @@ public class OrderEventListener {
         dataPlatformSender.sendOrderResult(
                 new OrderResultMessage(
                         event.userId(),
-                        event.orderId(),
-                        event.status().toString()
+                        event.orderId()
                 )
         );
     }

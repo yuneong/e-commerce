@@ -99,8 +99,7 @@ class OrderFacadeIntegrationTest {
             verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
                     argThat(msg ->
                             msg.userId().equals(info.userId()) &&
-                            msg.orderId().equals(info.orderId()) &&
-                            msg.status().equals("PENDING")
+                            msg.orderId().equals(info.orderId())
                     )
             );
         }

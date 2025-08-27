@@ -34,7 +34,7 @@ public class Order extends BaseEntity {
 
     private Long couponId;
 
-    public static Order place(User user, List<OrderItem> items, int itemsPrice) {
+    public static Order place(User user, List<OrderItem> items, int itemsPrice, Long couponId) {
         Order order = new Order();
 
         order.user = user;
@@ -42,19 +42,13 @@ public class Order extends BaseEntity {
             order.addItem(item);
         }
         order.totalPrice = itemsPrice;
-        order.status = OrderStatus.INIT;
+        order.status = OrderStatus.PENDING;
         order.paidAt = ZonedDateTime.now();
-        order.couponId = null;
+        order.couponId = couponId;
 
         order.validate();
 
         return order;
-    }
-
-    public void updateOrder(int totalPrice, Long couponId) {
-        this.totalPrice = totalPrice;
-        this.status = OrderStatus.PENDING;
-        this.couponId = couponId;
     }
 
     public void validate() {

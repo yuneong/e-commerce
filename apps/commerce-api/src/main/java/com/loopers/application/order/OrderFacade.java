@@ -4,7 +4,6 @@ import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
-import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.order.event.OrderSucceededEvent;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
@@ -30,37 +29,29 @@ public class OrderFacade {
 
     @Transactional
     public OrderInfo placeOrder(OrderCommand command) {
-        // 유저, 상품 조회
+        // 유저 조회
         User user = userService.getMyInfo(command.userId());
+
+        // 상품 조회 + 재고 체크 및 차감
         List<Product> products = productService.getProductsByIdsWithLock(command.items()
                 .stream().map(OrderItemCommand::productId).toList());
         List<OrderItem> items = OrderItemFactory.createFrom(command.items(), products);
-
-        // 주문 상품 금액 계산
-        int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
-
-        // 주문 초기 생성 ( totalPrice(할인 전 금액), status(INIT), couponId(null) )
-        Order order = orderService.createOrder(user, items, itemsPrice);
-
-        // 상품 재고 차감
         productService.checkAndDecreaseStock(items);
 
-        // 쿠폰 할인 금액 조회
+        // 할인 및 결제 금액 계산
+        int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
         int discountAmount = couponService.calculateDiscountAmount(command.userId(), command.couponId(), itemsPrice);
-
-        // 최종 금액 계산
         int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
-        // 주문 확정 ( totalPrice(쿠폰 사용 후 금액), status(PENDING), couponId 업데이트 )
-        order.updateOrder(totalPrice, command.couponId());
+        // 주문 생성
+        Order order = orderService.createOrder(user, items, totalPrice, command.couponId());
 
+        // 이벤트 발행
         eventPublisher.publishEvent(new OrderSucceededEvent(
                 user.getUserId(),
-                order.getId(),
-                OrderStatus.PENDING
+                order.getId()
         ));
 
-        // domain -> info
         return OrderInfo.from(order);
     }
 
