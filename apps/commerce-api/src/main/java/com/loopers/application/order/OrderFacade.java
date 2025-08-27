@@ -4,11 +4,14 @@ import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.OrderStatus;
+import com.loopers.domain.order.event.OrderSucceededEvent;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,7 @@ public class OrderFacade {
     private final UserService userService;
     private final ProductService productService;
     private final CouponService couponService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderInfo placeOrder(OrderCommand command) {
@@ -49,6 +53,12 @@ public class OrderFacade {
 
         // 주문 확정 ( totalPrice(쿠폰 사용 후 금액), status(PENDING), couponId 업데이트 )
         order.updateOrder(totalPrice, command.couponId());
+
+        eventPublisher.publishEvent(new OrderSucceededEvent(
+                user.getUserId(),
+                order.getId(),
+                OrderStatus.PENDING
+        ));
 
         // domain -> info
         return OrderInfo.from(order);

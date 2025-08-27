@@ -10,11 +10,13 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
+import com.loopers.infrastructure.platform.MockDataPlatformSender;
 import com.loopers.support.TestFixture;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -22,34 +24,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 
 @SpringBootTest
 class OrderFacadeIntegrationTest {
 
-    @Autowired
-    private OrderFacade orderFacade;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private BrandRepository brandRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private CouponRepository couponRepository;
-
-    @Autowired
-    private UserCouponRepository userCouponRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private DatabaseCleanUp databaseCleanUp;
+    @Autowired private OrderFacade orderFacade;
+    @Autowired private UserRepository userRepository;
+    @Autowired private BrandRepository brandRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private CouponRepository couponRepository;
+    @Autowired private UserCouponRepository userCouponRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private DatabaseCleanUp databaseCleanUp;
+    @MockitoBean private MockDataPlatformSender mockDataPlatformSender;
 
     private User user;
     private Product product;
@@ -63,11 +54,14 @@ class OrderFacadeIntegrationTest {
 
         coupon = couponRepository.save(new Coupon("10% 할인 쿠폰", CouponType.RATE, 10, 10, ZonedDateTime.now().plusDays(1)));
         userCouponRepository.save(UserCoupon.create(user.getUserId(), coupon.getId(), coupon.getExpiredAt()));
+
+        mockDataPlatformSender.clear();
     }
 
     @AfterEach
     void cleanDatabase() {
         databaseCleanUp.truncateAllTables();
+        mockDataPlatformSender.clear();
     }
 
     private OrderCommand buildValidCommand() {
@@ -100,6 +94,15 @@ class OrderFacadeIntegrationTest {
             Optional<Order> savedOrder = orderRepository.findByIdAndUser(info.orderId(), user);
             assertThat(savedOrder).isPresent();
             assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.PENDING);
+
+            // 데이터 플랫폼 전송 확인
+            verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
+                    argThat(msg ->
+                            msg.userId().equals(info.userId()) &&
+                            msg.orderId().equals(info.orderId()) &&
+                            msg.status().equals("PENDING")
+                    )
+            );
         }
     }
 
