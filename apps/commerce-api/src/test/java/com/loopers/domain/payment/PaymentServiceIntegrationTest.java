@@ -16,6 +16,7 @@ import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.infrastructure.pg.PgClient;
 import com.loopers.infrastructure.pg.PgV1Dto;
+import com.loopers.infrastructure.platform.MockDataPlatformSender;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.support.TestFixture;
 import com.loopers.support.error.CoreException;
@@ -27,6 +28,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -36,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -88,7 +92,7 @@ class PaymentServiceIntegrationTest {
     @Autowired private ProductRepository productRepository;
     @Autowired private CouponRepository couponRepository;
     @Autowired private UserCouponRepository userCouponRepository;
-    @Autowired private CouponService couponService;
+    @MockitoBean private MockDataPlatformSender mockDataPlatformSender;
 
     @TestConfiguration
     static class TestConfig {
@@ -240,6 +244,8 @@ class PaymentServiceIntegrationTest {
         failedEventListener.clear();
         succeededEventListener.clear();
         pg.reset();
+        mockDataPlatformSender.clear();
+        reset(mockDataPlatformSender);
 
         // 데이터 세팅
         User user = TestFixture.createUser();
@@ -269,6 +275,7 @@ class PaymentServiceIntegrationTest {
     @AfterEach
     void cleanDatabase() {
         databaseCleanUp.truncateAllTables();
+        mockDataPlatformSender.clear();
     }
 
     @DisplayName("createPayment()")
@@ -383,6 +390,14 @@ class PaymentServiceIntegrationTest {
                 UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(payment.getUserId(), order.getCouponId()).orElseThrow();
                 assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
             });
+
+            verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
+                    argThat(msg ->
+                            msg.userId().equals(payment.getUserId()) &&
+                            msg.orderId().equals(payment.getOrderId()) &&
+                            msg.paymentId().equals(payment.getId())
+                    )
+            );
         }
 
         @Test
@@ -415,7 +430,13 @@ class PaymentServiceIntegrationTest {
                 assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
             });
 
-
+            verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
+                    argThat(msg ->
+                            msg.userId().equals(payment.getUserId()) &&
+                                    msg.orderId().equals(payment.getOrderId()) &&
+                                    msg.paymentId().equals(payment.getId())
+                    )
+            );
         }
 
         @Test
@@ -445,6 +466,14 @@ class PaymentServiceIntegrationTest {
                 UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(payment.getUserId(), order.getCouponId()).orElseThrow();
                 assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.AVAILABLE);
             });
+
+            verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
+                    argThat(msg ->
+                            msg.userId().equals(payment.getUserId()) &&
+                                    msg.orderId().equals(payment.getOrderId()) &&
+                                    msg.paymentId().equals(payment.getId())
+                    )
+            );
         }
     }
 

@@ -2,6 +2,7 @@ package com.loopers.domain.payment.event;
 
 public record PaymentFailedEvent(
         Long orderId,
-        String userId
+        String userId,
+        Long paymentId
 ) {
 }

@@ -37,14 +37,16 @@ public class PointPaymentStrategy implements PaymentStrategy {
             payment.updateStatus(PaymentStatus.SUCCESS, null);
             eventPublisher.publishEvent(new PaymentSucceededEvent(
                     payment.getOrderId(),
-                    payment.getUserId()
+                    payment.getUserId(),
+                    payment.getId()
             ));
         } catch (CoreException e) {
             // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
             eventPublisher.publishEvent(new PaymentFailedEvent(
                     payment.getOrderId(),
-                    payment.getUserId()
+                    payment.getUserId(),
+                    payment.getId()
             ));
         } finally {
             savedPayment = paymentService.savePayment(payment);
@@ -52,23 +54,5 @@ public class PointPaymentStrategy implements PaymentStrategy {
 
         return PaymentInfo.from(savedPayment);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 }

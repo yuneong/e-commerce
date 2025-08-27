@@ -3,6 +3,8 @@ package com.loopers.interfaces.listener;
 import com.loopers.application.payment.PaymentFacade;
 import com.loopers.domain.payment.event.PaymentFailedEvent;
 import com.loopers.domain.payment.event.PaymentSucceededEvent;
+import com.loopers.infrastructure.platform.DataPlatformSender;
+import com.loopers.infrastructure.platform.OrderResultMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class PaymentEventListener {
 
     private final PaymentFacade paymentFacade;
+    private final DataPlatformSender dataPlatformSender;
 
     /**
      * 결제 성공 이벤트 처리
@@ -23,6 +26,13 @@ public class PaymentEventListener {
     @Async
     public void handlePaymentSucceededEvent(PaymentSucceededEvent event) {
         paymentFacade.handlePaymentSucceeded(event);
+        dataPlatformSender.sendOrderResult(
+                new OrderResultMessage(
+                        event.userId(),
+                        event.orderId(),
+                        event.paymentId()
+                )
+        );
     }
 
     /**
@@ -33,6 +43,13 @@ public class PaymentEventListener {
     @Async
     public void handlePaymentFailedEvent(PaymentFailedEvent event) {
         paymentFacade.handlePaymentFailed(event);
+        dataPlatformSender.sendOrderResult(
+                new OrderResultMessage(
+                        event.userId(),
+                        event.orderId(),
+                        event.paymentId()
+                )
+        );
     }
 
 }

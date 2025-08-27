@@ -57,14 +57,16 @@ public class PaymentService {
             payment.updateStatus(PaymentStatus.SUCCESS, null);
             eventPublisher.publishEvent(new PaymentSucceededEvent(
                     payment.getOrderId(),
-                    payment.getUserId()
+                    payment.getUserId(),
+                    payment.getId()
             ));
         } catch (Exception e) {
             // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
             eventPublisher.publishEvent(new PaymentFailedEvent(
                     payment.getOrderId(),
-                    payment.getUserId()
+                    payment.getUserId(),
+                    payment.getId()
             ));
         } finally {
             savedPayment = paymentRepository.save(payment);

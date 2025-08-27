@@ -28,6 +28,9 @@ public class PaymentFacade {
 
     @Transactional
     public PaymentInfo processPayment(ProcessPaymentCommand command) {
+        // 주문 검증
+        orderService.getOrderById(command.orderId());
+
         // 결제 생성
         Payment payment = paymentService.createPayment(command);
 
