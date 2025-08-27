@@ -34,21 +34,27 @@ public class Order extends BaseEntity {
 
     private Long couponId;
 
-    public static Order place(User user, List<OrderItem> items, int totalPrice, Long couponId) {
+    public static Order place(User user, List<OrderItem> items, int itemsPrice) {
         Order order = new Order();
 
         order.user = user;
         for (OrderItem item : items) {
             order.addItem(item);
         }
-        order.totalPrice = totalPrice;
-        order.status = OrderStatus.PENDING;
+        order.totalPrice = itemsPrice;
+        order.status = OrderStatus.INIT;
         order.paidAt = ZonedDateTime.now();
-        order.couponId = couponId;
+        order.couponId = null;
 
         order.validate();
 
         return order;
+    }
+
+    public void updateOrder(int totalPrice, Long couponId) {
+        this.totalPrice = totalPrice;
+        this.status = OrderStatus.PENDING;
+        this.couponId = couponId;
     }
 
     public void validate() {

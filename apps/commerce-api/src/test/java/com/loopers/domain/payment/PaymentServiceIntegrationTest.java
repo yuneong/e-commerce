@@ -263,8 +263,11 @@ class PaymentServiceIntegrationTest {
         userCouponRepository.save(UserCoupon.create(savedUser.getUserId(), coupon.getId(), ZonedDateTime.now().plusDays(2)));
         int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
         int discountAmount = couponService.calculateDiscountAmount(savedUser.getUserId(), coupon.getId(), itemsPrice);
+        int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
-        orderService.createOrder(savedUser, items, discountAmount, coupon.getId());
+        Order order = orderService.createOrder(savedUser, items, itemsPrice);
+        order.updateOrder(totalPrice, coupon.getId());
+        orderRepository.save(order);
     }
 
     @AfterEach

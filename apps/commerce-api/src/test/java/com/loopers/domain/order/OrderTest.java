@@ -32,14 +32,14 @@ class OrderTest {
             int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
             // when
-            Order order = Order.place(user, items, totalPrice, 1L);
+            Order order = Order.place(user, items, totalPrice);
 
             // then
             assertAll(
                     () -> assertEquals(user, order.getUser()),
                     () -> assertEquals(2, order.getOrderItems().size()),
                     () -> assertEquals(2500, order.getTotalPrice()),
-                    () -> assertEquals(OrderStatus.PENDING, order.getStatus()),
+                    () -> assertEquals(OrderStatus.INIT, order.getStatus()),
                     () -> assertNotNull(order.getPaidAt())
             );
         }
@@ -48,7 +48,7 @@ class OrderTest {
         @Test
         void throwsException_whenItemsNull() {
             // when & then
-            assertThrows(NullPointerException.class, () -> Order.place(user, null, 500, 1L));
+            assertThrows(NullPointerException.class, () -> Order.place(user, null, 500));
         }
 
         @DisplayName("주문 사용자(User)가 null이면 예외가 발생한다.")
@@ -62,14 +62,35 @@ class OrderTest {
             int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
             // when & then
-            assertThrows(NullPointerException.class, () -> Order.place(null, items, totalPrice, 1L));
+            assertThrows(NullPointerException.class, () -> Order.place(null, items, totalPrice));
         }
 
         @DisplayName("주문 아이템이 빈 리스트이면 예외가 발생한다.")
         @Test
         void throwsException_whenItemsEmpty() {
             // when & then
-            assertThrows(NullPointerException.class, () -> Order.place(user, List.of(), 0, 1L));
+            assertThrows(NullPointerException.class, () -> Order.place(user, List.of(), 0));
+        }
+    }
+
+    @DisplayName("updateOrder()")
+    @Nested
+    class UpdateOrder {
+        @DisplayName("주문 정보를 정상적으로 수정한다.")
+        @Test
+        void success() {
+            // given
+            Order order = new Order();
+            int newTotalPrice = 2000;
+            Long newCouponId = 2L;
+
+            // when
+            order.updateOrder(newTotalPrice, newCouponId);
+
+            // then
+            assertEquals(newTotalPrice, order.getTotalPrice());
+            assertEquals(OrderStatus.PENDING, order.getStatus());
+            assertEquals(newCouponId, order.getCouponId());
         }
     }
 

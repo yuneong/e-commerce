@@ -78,7 +78,7 @@ class OrderServiceIntegrationTest {
             int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
             // when
-            Order order = orderService.createOrder(savedUser, items, totalPrice, 1L);
+            Order order = orderService.createOrder(savedUser, items, totalPrice);
 
             // then
             assertAll(
@@ -104,7 +104,7 @@ class OrderServiceIntegrationTest {
 
             // when & then
             assertThrows(NullPointerException.class, () -> {
-                orderService.createOrder(null, items, 2000, 1L);
+                orderService.createOrder(null, items, 2000);
             });
         }
 
@@ -125,7 +125,7 @@ class OrderServiceIntegrationTest {
 
             // when & then
             assertThrows(NullPointerException.class, () -> {
-                orderService.createOrder(savedUser, items, 2000, 1L);
+                orderService.createOrder(savedUser, items, 2000);
             });
         }
 
@@ -146,7 +146,7 @@ class OrderServiceIntegrationTest {
 
             // when & then
             assertThrows(IllegalArgumentException.class, () -> {
-                orderService.createOrder(savedUser, items, -1000, 1L);
+                orderService.createOrder(savedUser, items, -1000);
             });
         }
     }
@@ -169,7 +169,7 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
-            orderService.createOrder(savedUser, items, 2000, 1L);
+            orderService.createOrder(savedUser, items, 2000);
 
             // when
             List<Order> orders = orderService.getOrders(savedUser);
@@ -210,7 +210,7 @@ class OrderServiceIntegrationTest {
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
 
-            Order order = orderService.createOrder(savedUser, items, 2000, 1L);
+            Order order = orderService.createOrder(savedUser, items, 2000);
 
             // when
             Order found = orderService.getOrderDetail(order.getId(), savedUser);
@@ -245,7 +245,7 @@ class OrderServiceIntegrationTest {
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
 
-            Order order = orderService.createOrder(savedUser, items, 2000, 1L);
+            Order order = orderService.createOrder(savedUser, items, 2000);
 
             // when & then
             assertThrows(IllegalArgumentException.class, () -> {

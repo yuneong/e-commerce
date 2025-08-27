@@ -17,10 +17,9 @@ public class OrderService {
     public Order createOrder(
             User user,
             List<OrderItem> items,
-            int totalPrice,
-            Long couponId
+            int itemsPrice
     ) {
-        Order order = Order.place(user, items, totalPrice, couponId);
+        Order order = Order.place(user, items, itemsPrice);
 
         return orderRepository.save(order);
     }
