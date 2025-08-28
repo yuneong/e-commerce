@@ -1,0 +1,42 @@
+
+### 결제 생성(카드)
+POST {{commerce-api}}/api/v1/payments
+Content-Type: application/json
+
+{
+    "userId": "oyy",
+    "orderId": 1,
+    "amount" : 65000,
+    "paymentMethod": "CARD",
+    "cardType": "SAMSUNG",
+    "cardNo": "1234-5678-9814-1451"
+}
+
+
+### 결제 생성(포인트)
+POST {{commerce-api}}/api/v1/payments
+Content-Type: application/json
+
+{
+    "userId": "oyy",
+    "orderId": 2,
+    "amount" : 32400,
+    "paymentMethod": "POINT",
+    "cardType": "NONE",
+    "cardNo": ""
+}
+
+
+### 콜백
+POST {{commerce-api}}/api/v1/payments/callback
+Content-Type: application/json
+
+{
+    "transactionKey": "20250822:TR:1fe65d",
+    "orderId": 1,
+    "cardType": "SAMSUNG",
+    "cardNo": "1234-5678-9814-1451",
+    "amount" : 10,
+    "status": "SUCCESS",
+    "reason": "결제 성공"
+}

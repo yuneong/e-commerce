@@ -1,0 +1,17 @@
+
+### 상품 목록 조회 (기본)
+GET {{commerce-api}}/api/v1/products
+X-USER-ID: oyy
+Content-Type: application/json
+
+
+### 상품 목록 조회 (브랜드/정렬/페이징)
+GET {{commerce-api}}/api/v1/products?brandId=1&page=0&size=20&sort=createdAt,desc
+X-USER-ID: oyy
+Content-Type: application/json
+
+
+### 상품 상세 조회
+GET {{commerce-api}}/api/v1/products/2
+X-USER-ID: oyy
+Content-Type: application/json
