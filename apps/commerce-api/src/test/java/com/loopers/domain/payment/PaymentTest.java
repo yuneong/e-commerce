@@ -1,6 +1,5 @@
 package com.loopers.domain.payment;
 
-import com.loopers.application.payment.PaymentMethod;
 import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,7 +1,6 @@
 package com.loopers.domain.payment;
 
 import com.loopers.application.payment.CallbackPaymentCommand;
-import com.loopers.application.payment.PaymentMethod;
 import com.loopers.application.payment.ProcessPaymentCommand;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandRepository;

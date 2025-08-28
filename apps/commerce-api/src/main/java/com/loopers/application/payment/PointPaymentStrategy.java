@@ -40,7 +40,7 @@ public class PointPaymentStrategy implements PaymentStrategy {
                     payment.getUserId(),
                     payment.getId()
             ));
-        } catch (CoreException e) {
+        } catch (Exception e) {
             // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
             eventPublisher.publishEvent(new PaymentFailedEvent(
