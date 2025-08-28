@@ -16,9 +16,14 @@ import java.time.ZonedDateTime;
 public class Coupon extends BaseEntity {
 
     private String name;
+
+    @Enumerated(EnumType.STRING)
     private CouponType type;
+
     private int quantity;
+
     private int discountValue;
+
     private ZonedDateTime expiredAt;
 
     public Coupon(String name, CouponType type, int quantity, int discountValue, ZonedDateTime expiredAt) {

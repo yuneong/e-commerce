@@ -28,6 +28,7 @@ public class Order extends BaseEntity {
 
     private int totalPrice;
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     private ZonedDateTime paidAt;

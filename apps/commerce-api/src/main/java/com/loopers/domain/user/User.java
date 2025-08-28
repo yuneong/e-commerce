@@ -2,6 +2,8 @@ package com.loopers.domain.user;
 
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,8 +20,12 @@ import java.time.format.DateTimeParseException;
 public class User extends BaseEntity {
 
     private String userId;
+
+    @Enumerated(EnumType.STRING)
     private Gender gender;
+
     private String birth;
+
     private String email;
 
     private String REGEX_USER_ID = "^[a-zA-Z0-9]{1,10}$";

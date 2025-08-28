@@ -27,6 +27,7 @@ public class Product extends BaseEntity {
 
     private int stock;
 
+    @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.ACTIVE; // 기본 상태를 ACTIVE로 설정`
 
     private Long likeCount = 0L;

@@ -15,10 +15,16 @@ import java.time.ZonedDateTime;
 public class UserCoupon extends BaseEntity {
 
     private String userId;
+
     private Long couponId;
+
+    @Enumerated(EnumType.STRING)
     private UserCouponStatus status = UserCouponStatus.AVAILABLE;
+
     private ZonedDateTime usedAt;
+
     private ZonedDateTime expiredAt; // 만료일
+
     @Version private Long version;
 
     public UserCoupon(String userId, Long couponId, UserCouponStatus status, ZonedDateTime usedAt, ZonedDateTime expiredAt) {
