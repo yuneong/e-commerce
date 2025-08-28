@@ -1,9 +1,11 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.event.OrderPlacedEvent;
 import com.loopers.domain.order.event.OrderSucceededEvent;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
@@ -47,9 +49,10 @@ public class OrderFacade {
         Order order = orderService.createOrder(user, items, totalPrice, command.couponId());
 
         // 이벤트 발행
-        eventPublisher.publishEvent(new OrderSucceededEvent(
-                user.getUserId(),
-                order.getId()
+        eventPublisher.publishEvent(new OrderSucceededEvent(user.getUserId(), order.getId()));
+        eventPublisher.publishEvent(UserActionEnvelope.of(
+                "ORDER_PLACED",
+                OrderPlacedEvent.of(order.getId(), totalPrice)
         ));
 
         return OrderInfo.from(order);

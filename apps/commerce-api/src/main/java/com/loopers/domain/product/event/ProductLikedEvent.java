@@ -2,23 +2,24 @@ package com.loopers.domain.product.event;
 
 import java.util.UUID;
 
-public record ProductLikeEvent(
+public record ProductLikedEvent(
         String eventId,
         Long productId,
         String userId,
         String likeType
 ) {
 
-    public static ProductLikeEvent of(
+    public static ProductLikedEvent of(
             Long productId,
             String userId,
             String likeType
     ) {
-        return new ProductLikeEvent(
+        return new ProductLikedEvent(
                 UUID.randomUUID().toString(),
                 productId,
                 userId,
                 likeType
         );
     }
+
 }

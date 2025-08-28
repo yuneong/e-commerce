@@ -1,11 +1,13 @@
 package com.loopers.infrastructure.platform;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Getter
 @Component
 public class MockDataPlatformSender implements DataPlatformSender {
@@ -20,7 +22,7 @@ public class MockDataPlatformSender implements DataPlatformSender {
             Thread.currentThread().interrupt();
         }
         sentMessages.add(message);
-        System.out.println("[MOCK] 데이터 플랫폼 전송: " + message);
+        log.info("[MOCK] 데이터 플랫폼 전송: {}", message);
     }
 
     public void clear() {

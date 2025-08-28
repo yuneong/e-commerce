@@ -25,7 +25,6 @@ public class OrderEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async
     public void handleOrderSucceededEvent(OrderSucceededEvent event) {
-        System.out.println("!!!!success!!!!!!!handleOrderSucceededEvent called");
         dataPlatformSender.sendOrderResult(
                 new OrderResultMessage(
                         event.userId(),

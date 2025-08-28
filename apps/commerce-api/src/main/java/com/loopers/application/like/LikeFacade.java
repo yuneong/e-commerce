@@ -1,12 +1,13 @@
 package com.loopers.application.like;
 
 
+import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.Product;
-import com.loopers.domain.product.event.ProductLikeEvent;
 import com.loopers.domain.product.ProductService;
+import com.loopers.domain.product.event.ProductLikedEvent;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,11 @@ public class LikeFacade {
 
         // changed 가 true 면 이벤트 발행
         if(savedLike.changed()){
-            eventPublisher.publishEvent(ProductLikeEvent.of(product.getId(), user.getUserId(), "like"));
+            eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "like"));
+            eventPublisher.publishEvent(UserActionEnvelope.of(
+                    "PRODUCT_LIKED",
+                    ProductLikedEvent.of(product.getId(), user.getUserId(), "like")
+            ));
         }
 
         // info
@@ -56,7 +61,12 @@ public class LikeFacade {
 
         // changed 가 true 면 이벤트 발행
         if(savedLike.changed()){
-            eventPublisher.publishEvent(ProductLikeEvent.of(product.getId(), user.getUserId(), "unlike"));
+            eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike"));
+            eventPublisher.publishEvent(UserActionEnvelope.of(
+                    "PRODUCT_UNLIKED",
+                    ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike")
+            ));
+
         }
 
         // info

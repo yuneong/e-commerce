@@ -1,6 +1,6 @@
 package com.loopers.interfaces.listener;
 
-import com.loopers.domain.product.event.ProductLikeEvent;
+import com.loopers.domain.product.event.ProductLikedEvent;
 import com.loopers.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class ProductLikeEventListener {
      * @param event
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleProductLikeCountEvent(ProductLikeEvent event) {
+    public void handleProductLikeCountEvent(ProductLikedEvent event) {
         productService.updateLikeCount(event.productId(), event.likeType());
     }
 
