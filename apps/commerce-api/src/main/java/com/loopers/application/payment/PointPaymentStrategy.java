@@ -2,6 +2,8 @@ package com.loopers.application.payment;
 
 
 import com.loopers.domain.payment.*;
+import com.loopers.domain.payment.event.PaymentFailedEvent;
+import com.loopers.domain.payment.event.PaymentSucceededEvent;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.user.User;
@@ -33,12 +35,18 @@ public class PointPaymentStrategy implements PaymentStrategy {
 
             // 성공 시
             payment.updateStatus(PaymentStatus.SUCCESS, null);
-        } catch (CoreException e) {
+            eventPublisher.publishEvent(new PaymentSucceededEvent(
+                    payment.getOrderId(),
+                    payment.getUserId(),
+                    payment.getId()
+            ));
+        } catch (Exception e) {
             // 실패 시
             payment.updateStatus(PaymentStatus.FAILED, e.getMessage());
             eventPublisher.publishEvent(new PaymentFailedEvent(
                     payment.getOrderId(),
-                    payment.getUserId()
+                    payment.getUserId(),
+                    payment.getId()
             ));
         } finally {
             savedPayment = paymentService.savePayment(payment);
@@ -46,23 +54,5 @@ public class PointPaymentStrategy implements PaymentStrategy {
 
         return PaymentInfo.from(savedPayment);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 }

@@ -12,13 +12,11 @@ import java.util.List;
 public class LikeV1Dto {
 
     public record LikeResponse(
-            LikeStatus likedYn,
-            Long likeCount
+            LikeStatus likedYn
     ) {
         public static LikeResponse from(LikeInfo info) {
             return new LikeResponse(
-                    info.likedYn(),
-                    info.likeCount()
+                    info.likedYn()
             );
         }
     }

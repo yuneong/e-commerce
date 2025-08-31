@@ -1,13 +1,11 @@
 package com.loopers.domain.coupon;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.domain.order.DiscountedOrderByCoupon;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 
@@ -18,9 +16,14 @@ import java.time.ZonedDateTime;
 public class Coupon extends BaseEntity {
 
     private String name;
+
+    @Enumerated(EnumType.STRING)
     private CouponType type;
+
     private int quantity;
-    private int discountValue; // 할인 금액 (고정 금액 할인 또는 비율 할인에 따라 다름)
+
+    private int discountValue;
+
     private ZonedDateTime expiredAt;
 
     public Coupon(String name, CouponType type, int quantity, int discountValue, ZonedDateTime expiredAt) {
@@ -31,10 +34,8 @@ public class Coupon extends BaseEntity {
         this.expiredAt = expiredAt;
     }
 
-    public DiscountedOrderByCoupon applyDiscount(BigDecimal totalPrice, DiscountStrategyFactory factory) {
-        BigDecimal discountedTotalPrice = factory.create(this).applyDiscount(totalPrice);
-
-        return DiscountedOrderByCoupon.from(this.getId(), discountedTotalPrice);
+    public int discountAmount(int itemsPrice, DiscountStrategyFactory factory) {
+        return factory.create(this).discountAmount(itemsPrice);
     }
 
 }

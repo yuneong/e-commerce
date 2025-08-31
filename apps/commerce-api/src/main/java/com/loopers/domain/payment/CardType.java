@@ -4,4 +4,5 @@ public enum CardType {
     SAMSUNG,
     KB,
     HYUNDAI,
+    NONE
 }

@@ -1,15 +1,18 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.coupon.CouponService;
-import com.loopers.domain.order.DiscountedOrderByCoupon;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.event.OrderPlacedEvent;
+import com.loopers.domain.order.event.OrderSucceededEvent;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,29 +27,35 @@ public class OrderFacade {
     private final UserService userService;
     private final ProductService productService;
     private final CouponService couponService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderInfo placeOrder(OrderCommand command) {
-        // 유저, 상품 조회
+        // 유저 조회
         User user = userService.getMyInfo(command.userId());
+
+        // 상품 조회 + 재고 체크 및 차감
         List<Product> products = productService.getProductsByIdsWithLock(command.items()
                 .stream().map(OrderItemCommand::productId).toList());
         List<OrderItem> items = OrderItemFactory.createFrom(command.items(), products);
-
-        // 상품 재고 차감
         productService.checkAndDecreaseStock(items);
 
-        // 쿠폰 조회 및 적용, 사용
-        DiscountedOrderByCoupon discountedOrderByCoupon = couponService.useCoupon(command.userId(), command.couponId(), items);
+        // 할인 및 결제 금액 계산
+        int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
+        int discountAmount = couponService.calculateDiscountAmount(command.userId(), command.couponId(), itemsPrice);
+        int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
         // 주문 생성
-        Order order = orderService.createOrder(user, items, discountedOrderByCoupon);
+        Order order = orderService.createOrder(user, items, totalPrice, command.couponId());
 
-        // 주문 저장
-        Order savedOrder = orderService.saveOrder(order);
+        // 이벤트 발행
+        eventPublisher.publishEvent(new OrderSucceededEvent(user.getUserId(), order.getId()));
+        eventPublisher.publishEvent(UserActionEnvelope.of(
+                "ORDER_PLACED",
+                OrderPlacedEvent.of(order.getId(), totalPrice)
+        ));
 
-        // domain -> info
-        return OrderInfo.from(savedOrder);
+        return OrderInfo.from(order);
     }
 
     @Transactional(readOnly = true)

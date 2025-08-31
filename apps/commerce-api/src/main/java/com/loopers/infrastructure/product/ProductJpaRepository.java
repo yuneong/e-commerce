@@ -19,12 +19,17 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = "brand")
     Optional<Product> findWithBrandById(Long productId);
 
+    @EntityGraph(attributePaths = "brand")
     Page<Product> findByBrandId(Long brandId, Pageable pageable);
 
+    @EntityGraph(attributePaths = "brand")
     Page<Product> findAll(Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id IN :productIds")
     List<Product> findAllWithLock(@Param("productIds") List<Long> productIds);
+
+    @EntityGraph(attributePaths = "brand")
+    Optional<Product> findById(Long productId);
 
 }

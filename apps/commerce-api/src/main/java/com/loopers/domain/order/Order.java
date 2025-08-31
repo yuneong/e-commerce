@@ -7,7 +7,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,37 +26,41 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "order_id")
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    private BigDecimal totalPrice;
+    private int totalPrice;
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     private ZonedDateTime paidAt;
 
     private Long couponId;
 
-    public static Order place(User user, List<OrderItem> items, DiscountedOrderByCoupon discountedOrderByCoupon) {
+    public static Order place(User user, List<OrderItem> items, int itemsPrice, Long couponId) {
         Order order = new Order();
-
-        order.validate(user, items);
 
         order.user = user;
         for (OrderItem item : items) {
             order.addItem(item);
         }
-        order.totalPrice = discountedOrderByCoupon.discountedTotalPrice();
+        order.totalPrice = itemsPrice;
         order.status = OrderStatus.PENDING;
         order.paidAt = ZonedDateTime.now();
-        order.couponId = discountedOrderByCoupon.couponId();
+        order.couponId = couponId;
+
+        order.validate();
 
         return order;
     }
 
-    public void validate(User user, List<OrderItem> items) {
+    public void validate() {
         if (user == null) {
             throw new NullPointerException("주문시 사용자 정보는 필수입니다.");
         }
-        if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("주문 아이템은 필수입니다.");
+        if (orderItems == null || orderItems.isEmpty()) {
+            throw new NullPointerException("주문 아이템은 필수입니다.");
+        }
+        if (totalPrice < 0) {
+            throw new IllegalArgumentException("총 금액은 0원 이상이어야 합니다.");
         }
     }
 

@@ -3,6 +3,7 @@ package com.loopers.interfaces.api.payment;
 
 import com.loopers.application.payment.*;
 import com.loopers.domain.payment.CardType;
+import com.loopers.domain.payment.PaymentMethod;
 
 public class PaymentV1Dto {
 

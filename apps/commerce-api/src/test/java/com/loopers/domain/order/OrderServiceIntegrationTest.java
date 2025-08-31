@@ -13,7 +13,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +59,7 @@ class OrderServiceIntegrationTest {
     @Nested
     class createOrder {
 
-        @DisplayName("정상적으로 주문이 생성되고 재고 및 포인트가 차감된다.")
+        @DisplayName("정상적으로 주문이 생성된다.")
         @Test
         void createOrder_success() {
             // given
@@ -73,19 +72,18 @@ class OrderServiceIntegrationTest {
                     10
             );
             Product savedProduct = productRepository.save(product);
-            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(18000) // 할인 후 가격
-            );
+            List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2); // savedProduct의 수량 2개
+            int itemsPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
+            int discountAmount = 2000;
+            int totalPrice = Math.max(0, itemsPrice - discountAmount);
 
             // when
-            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
+            Order order = orderService.createOrder(savedUser, items, totalPrice, 1L);
 
             // then
             assertAll(
                     () -> assertThat(order.getOrderItems()).hasSize(1),
-                    () -> assertThat(order.getTotalPrice()).isEqualTo(BigDecimal.valueOf(18000))
+                    () -> assertThat(order.getTotalPrice()).isEqualTo(18000)
             );
         }
 
@@ -103,14 +101,10 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(18000) // 할인 후 가격
-            );
 
             // when & then
             assertThrows(NullPointerException.class, () -> {
-                orderService.createOrder(null, items, discountedOrderByCoupon);
+                orderService.createOrder(null, items, 2000, 1L);
             });
         }
 
@@ -128,25 +122,16 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = List.of();
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(18000) // 할인 후 가격
-            );
 
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> {
-                orderService.createOrder(savedUser, items, discountedOrderByCoupon);
+            assertThrows(NullPointerException.class, () -> {
+                orderService.createOrder(savedUser, items, 2000, 1L);
             });
         }
-    }
 
-    @DisplayName("주문 저장 시,")
-    @Nested
-    class saveOrder {
-
-        @DisplayName("정상적으로 저장되고 상태가 COMPLETE로 변경된다.")
+        @DisplayName("총 금액이 음수이면 예외가 발생한다.")
         @Test
-        void saveOrder_success() {
+        void createOrder_fail_dueToNegativeTotalPrice() {
             // given
             Product product = Product.create(
                     savedBrand,
@@ -158,32 +143,12 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 2);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(18000) // 할인 후 가격
-            );
 
-            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
-
-            // when
-            Order savedOrder = orderService.saveOrder(order);
-
-            // then
-            assertAll(
-                    () -> assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.COMPLETE),
-                    () -> assertThat(savedOrder.getId()).isNotNull()
-            );
-        }
-
-        @DisplayName("order가 null이면 예외가 발생한다.")
-        @Test
-        void saveOrder_fail_whenOrderIsNull() {
             // when & then
-            assertThrows(NullPointerException.class, () -> {
-                orderService.saveOrder(null);
+            assertThrows(IllegalArgumentException.class, () -> {
+                orderService.createOrder(savedUser, items, -1000, 1L);
             });
         }
-
     }
 
     @DisplayName("주문 목록 조회 시,")
@@ -204,13 +169,7 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(8000) // 할인 후 가격
-            );
-
-            Order order = orderService.createOrder(savedUser, items, discountedOrderByCoupon);
-            orderService.saveOrder(order);
+            orderService.createOrder(savedUser, items, 2000, 1L);
 
             // when
             List<Order> orders = orderService.getOrders(savedUser);
@@ -250,12 +209,8 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(8000) // 할인 후 가격
-            );
 
-            Order order = orderService.saveOrder(orderService.createOrder(savedUser, items, discountedOrderByCoupon));
+            Order order = orderService.createOrder(savedUser, items, 2000, 1L);
 
             // when
             Order found = orderService.getOrderDetail(order.getId(), savedUser);
@@ -289,12 +244,8 @@ class OrderServiceIntegrationTest {
             );
             Product savedProduct = productRepository.save(product);
             List<OrderItem> items = TestFixture.createOrderItems(savedProduct, 1);
-            DiscountedOrderByCoupon discountedOrderByCoupon = new DiscountedOrderByCoupon(
-                    1L,
-                    BigDecimal.valueOf(8000) // 할인 후 가격
-            );
 
-            Order order = orderService.saveOrder(orderService.createOrder(savedUser, items, discountedOrderByCoupon));
+            Order order = orderService.createOrder(savedUser, items, 2000, 1L);
 
             // when & then
             assertThrows(IllegalArgumentException.class, () -> {

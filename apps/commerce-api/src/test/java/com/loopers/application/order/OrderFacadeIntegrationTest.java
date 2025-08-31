@@ -10,11 +10,13 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
+import com.loopers.infrastructure.platform.MockDataPlatformSender;
 import com.loopers.support.TestFixture;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -22,39 +24,27 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 
 @SpringBootTest
 class OrderFacadeIntegrationTest {
 
-    @Autowired
-    private OrderFacade orderFacade;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private BrandRepository brandRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private CouponRepository couponRepository;
-
-    @Autowired
-    private UserCouponRepository userCouponRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private DatabaseCleanUp databaseCleanUp;
+    @Autowired private OrderFacade orderFacade;
+    @Autowired private UserRepository userRepository;
+    @Autowired private BrandRepository brandRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private CouponRepository couponRepository;
+    @Autowired private UserCouponRepository userCouponRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private DatabaseCleanUp databaseCleanUp;
+    @MockitoBean private MockDataPlatformSender mockDataPlatformSender;
 
     private User user;
     private Product product;
     private Coupon coupon;
-    private UserCoupon userCoupon;
 
     @BeforeEach
     void setUp() {
@@ -63,12 +53,15 @@ class OrderFacadeIntegrationTest {
         product = productRepository.save(TestFixture.createProduct(brandRepository.save(TestFixture.createBrand())));
 
         coupon = couponRepository.save(new Coupon("10% 할인 쿠폰", CouponType.RATE, 10, 10, ZonedDateTime.now().plusDays(1)));
-        userCoupon = userCouponRepository.save(UserCoupon.create(user.getUserId(), coupon.getId(), coupon.getExpiredAt()));
+        userCouponRepository.save(UserCoupon.create(user.getUserId(), coupon.getId(), coupon.getExpiredAt()));
+
+        mockDataPlatformSender.clear();
     }
 
     @AfterEach
     void cleanDatabase() {
         databaseCleanUp.truncateAllTables();
+        mockDataPlatformSender.clear();
     }
 
     private OrderCommand buildValidCommand() {
@@ -93,19 +86,22 @@ class OrderFacadeIntegrationTest {
             assertThat(info).isNotNull();
             assertThat(info.totalPrice()).isEqualTo(1800); // 2000 * 10% 할인
 
-            // 1. 쿠폰 사용 상태 확인
-            UserCoupon usedCoupon = userCouponRepository.findByUserIdAndCouponId(user.getUserId(), coupon.getId()).orElseThrow();
-            assertThat(usedCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
-            assertThat(usedCoupon.getUsedAt()).isNotNull();
-
-            // 2. 재고 차감 확인 (기존 10개 - 2개 주문 = 8개)
+            // 재고 차감 확인 (기존 10개 - 2개 주문 = 8개)
             Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
             assertThat(updatedProduct.getStock()).isEqualTo(8);
 
-            // 3. 주문 상태 확인
+            // 주문 상태 확인
             Optional<Order> savedOrder = orderRepository.findByIdAndUser(info.orderId(), user);
             assertThat(savedOrder).isPresent();
-            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.COMPLETE);
+            assertThat(savedOrder.get().getStatus()).isEqualTo(OrderStatus.PENDING);
+
+            // 데이터 플랫폼 전송 확인
+            verify(mockDataPlatformSender, timeout(1000)).sendOrderResult(
+                    argThat(msg ->
+                            msg.userId().equals(info.userId()) &&
+                            msg.orderId().equals(info.orderId())
+                    )
+            );
         }
     }
 
@@ -125,7 +121,7 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalArgumentException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE);
+            assertRollbackState();
         }
 
         @DisplayName("유저가 해당 쿠폰을 보유하지 않으면 주문은 실패하고 롤백된다.")
@@ -142,22 +138,7 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalArgumentException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE);
-        }
-
-        @DisplayName("쿠폰이 사용 불가능 상태일 경우 주문은 실패하고 롤백된다.")
-        @Test
-        void fail_whenCouponIsNotAvailable() {
-            // 쿠폰 상태를 USED로 변경 (이미 사용한 경우)
-            userCoupon.use();
-            userCouponRepository.save(userCoupon);
-
-            OrderCommand command = buildValidCommand();
-
-            assertThatThrownBy(() -> orderFacade.placeOrder(command))
-                    .isInstanceOf(IllegalStateException.class);
-
-            assertRollbackState(UserCouponStatus.USED);
+            assertRollbackState();
         }
 
         @DisplayName("재고가 부족할 경우 주문은 실패하고 롤백된다.")
@@ -173,10 +154,10 @@ class OrderFacadeIntegrationTest {
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(IllegalStateException.class);
 
-            assertRollbackState(UserCouponStatus.AVAILABLE);
+            assertRollbackState();
         }
 
-        private void assertRollbackState(UserCouponStatus expectedCouponStatus) {
+        private void assertRollbackState() {
             // 주문이 저장되지 않아야 함
             List<Order> orders = orderRepository.findByUser(user);
             assertThat(orders).isEmpty();
@@ -184,17 +165,6 @@ class OrderFacadeIntegrationTest {
             // 재고 차감 없어야 함
             Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
             assertThat(updatedProduct.getStock()).isEqualTo(10);
-
-            // 쿠폰 상태 검증
-            UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(user.getUserId(), coupon.getId()).orElse(null);
-            if (userCoupon != null) {
-                assertThat(userCoupon.getStatus()).isEqualTo(expectedCouponStatus);
-                if (expectedCouponStatus == UserCouponStatus.AVAILABLE) {
-                    assertThat(userCoupon.getUsedAt()).isNull();
-                } else if (expectedCouponStatus == UserCouponStatus.USED) {
-                    assertThat(userCoupon.getUsedAt()).isNotNull();
-                }
-            }
         }
     }
 

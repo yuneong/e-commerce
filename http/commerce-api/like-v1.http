@@ -1,0 +1,11 @@
+
+### 좋아요 추가 요청
+POST {{commerce-api}}/api/v1/likes/products/3
+X-USER-ID: oyy
+Content-Type: application/json
+
+
+### 좋아요 취소 요청
+DELETE {{commerce-api}}/api/v1/likes/products/3
+X-USER-ID: oyy
+Content-Type: application/json

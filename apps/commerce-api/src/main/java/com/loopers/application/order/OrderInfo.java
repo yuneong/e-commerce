@@ -29,7 +29,7 @@ public record OrderInfo(
         return new OrderInfo(
                 order.getId(),
                 order.getUser().getUserId(),
-                order.getTotalPrice().intValue(),
+                order.getTotalPrice(),
                 order.getStatus(),
                 itemInfos,
                 order.getCouponId()

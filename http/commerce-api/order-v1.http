@@ -1,0 +1,16 @@
+
+### 주문 요청
+POST {{commerce-api}}/api/v1/orders
+X-USER-ID: oyy
+Content-Type: application/json
+
+{
+    "items": [
+        {
+            "productId": 3,
+            "quantity": 1,
+            "price": 36000
+        }
+    ],
+    "couponId": 2
+}

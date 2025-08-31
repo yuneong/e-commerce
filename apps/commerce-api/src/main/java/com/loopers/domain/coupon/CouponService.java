@@ -1,13 +1,10 @@
 package com.loopers.domain.coupon;
 
-import com.loopers.domain.order.DiscountedOrderByCoupon;
-import com.loopers.domain.order.OrderItem;
 import lombok.RequiredArgsConstructor;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 
 @Service
@@ -18,41 +15,38 @@ public class CouponService {
     private final UserCouponRepository userCouponRepository;
     private final DiscountStrategyFactory discountStrategyFactory;
 
-    @Transactional
-    public DiscountedOrderByCoupon useCoupon(String userId, Long couponId, List<OrderItem> items) {
-        // 쿠폰 적용 전 총 금액
-        int totalPrice = items.stream().mapToInt(item -> item.getPrice() * item.getQuantity()).sum();
-
-        // 쿠폰 사용 X
+    public int calculateDiscountAmount(String userId, Long couponId, int itemsPrice) {
+        // 쿠폰 없음 → 0원 할인
         if (couponId == null) {
-            return DiscountedOrderByCoupon.from(
-                    null,
-                    discountStrategyFactory.create(null).applyDiscount(BigDecimal.valueOf(totalPrice))
-            );
+            return discountStrategyFactory.create(null).discountAmount(itemsPrice);
         }
 
-        // 쿠폰 검증
+        // 존재/보유 검증
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
-
         UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 보유한 쿠폰이 아닙니다."));
 
-        // 쿠폰 적용
-        DiscountedOrderByCoupon discountedOrderByCoupon = coupon.applyDiscount(BigDecimal.valueOf(totalPrice), discountStrategyFactory);
+        // 상태/만료 검증
+        userCoupon.validate();
 
-        // 쿠폰 사용 처리
-        userCoupon.use();
-
-        return discountedOrderByCoupon;
+        return coupon.discountAmount(itemsPrice, discountStrategyFactory);
     }
 
     @Transactional
-    public void restoreUserCoupon(String userId, Long couponId) {
+    @Retryable(
+            retryFor = {
+                    org.springframework.dao.OptimisticLockingFailureException.class,
+                    jakarta.persistence.OptimisticLockException.class
+            },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 10, multiplier = 2.0, maxDelay = 200)
+    )
+    public void useCoupon(String userId, Long couponId) {
         UserCoupon userCoupon = userCouponRepository.findByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 보유한 쿠폰이 아닙니다."));
 
-        userCoupon.restoreCoupon();
+        userCoupon.use();
 
         userCouponRepository.save(userCoupon);
     }

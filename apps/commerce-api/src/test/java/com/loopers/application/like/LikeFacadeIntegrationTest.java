@@ -107,13 +107,11 @@ class LikeFacadeIntegrationTest {
             LikeInfo info = likeFacade.like(product.getId(), user.getUserId());
 
             // then
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
             assertAll(
-                    () -> assertThat(info.likeCount()).isEqualTo(3L), // 2 + 1 (testUser1,2의 좋아요 포함)
+                    () -> assertThat(updated.getLikeCount()).isEqualTo(3L), // 2 + 1 (testUser1,2의 좋아요 포함)
                     () -> assertThat(info.likedYn()).isEqualTo(LikeStatus.Y)
             );
-
-            Product updated = productRepository.findById(product.getId()).orElseThrow();
-            assertThat(updated.getLikeCount()).isEqualTo(3L);
         }
 
         @DisplayName("이미 좋아요를 누른 상품에 대해 다시 좋아요를 누르면, 좋아요 수가 증가하지 않고, 기존 좋아요 정보가 반환된다.")
@@ -127,13 +125,11 @@ class LikeFacadeIntegrationTest {
             LikeInfo info = likeFacade.like(product.getId(), user.getUserId());
 
             // then
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
             assertAll(
-                    () -> assertThat(info.likeCount()).isEqualTo(2L), // 기존 좋아요 수
+                    () -> assertThat(updated.getLikeCount()).isEqualTo(2L), // 기존 좋아요 수
                     () -> assertThat(info.likedYn()).isEqualTo(LikeStatus.Y)
             );
-
-            Product updated = productRepository.findById(product.getId()).orElseThrow();
-            assertThat(updated.getLikeCount()).isEqualTo(2L);
         }
 
     }
@@ -154,13 +150,11 @@ class LikeFacadeIntegrationTest {
             LikeInfo info = likeFacade.unLike(product.getId(), user.getUserId());
 
             // then
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
             assertAll(
-                    () -> assertThat(info.likeCount()).isEqualTo(1L), // 2 - 1 (testUser1의 좋아요 취소)
+                    () -> assertThat(updated.getLikeCount()).isEqualTo(1L), // 2 - 1 (testUser1의 좋아요 취소)
                     () -> assertThat(info.likedYn()).isEqualTo(LikeStatus.N)
             );
-
-            Product updated = productRepository.findById(product.getId()).orElseThrow();
-            assertThat(updated.getLikeCount()).isEqualTo(1L);
         }
 
         @DisplayName("이미 좋아요를 취소한 상품에 대해 다시 좋아요 취소를 시도하면, 좋아요 수가 감소하지 않고, 기존 좋아요 정보가 반환된다.")
@@ -176,13 +170,11 @@ class LikeFacadeIntegrationTest {
             LikeInfo info = likeFacade.unLike(product.getId(), user.getUserId());
 
             // then
+            Product updated = productRepository.findById(product.getId()).orElseThrow();
             assertAll(
-                    () -> assertThat(info.likeCount()).isEqualTo(1L),
+                    () -> assertThat(updated.getLikeCount()).isEqualTo(1L),
                     () -> assertThat(info.likedYn()).isEqualTo(LikeStatus.N)
             );
-
-            Product updated = productRepository.findById(product.getId()).orElseThrow();
-            assertThat(updated.getLikeCount()).isEqualTo(1L); // 좋아요 수
         }
 
     }

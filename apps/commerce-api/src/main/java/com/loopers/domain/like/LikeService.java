@@ -48,7 +48,7 @@ public class LikeService {
                     boolean changed = !"Y".equals(before);
                     return new LikeChange(existingLike, changed);
                 })
-                .orElseGet(() -> new LikeChange(Like.create(user, product), true));
+                .orElseGet(() -> new LikeChange(likeRepository.save(Like.create(user, product)), true));
     }
 
     @Transactional
