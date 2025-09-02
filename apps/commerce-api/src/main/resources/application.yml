@@ -1,3 +1,7 @@
+management:
+  server:
+    port: 8081
+
 server:
   shutdown: graceful
   tomcat:
@@ -21,6 +25,7 @@ spring:
     import:
       - jpa.yml
       - redis.yml
+      - kafka.yml
       - logging.yml
       - monitoring.yml
 
