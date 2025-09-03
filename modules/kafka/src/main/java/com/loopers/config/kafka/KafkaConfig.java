@@ -1,12 +1,14 @@
 package com.loopers.config.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -17,7 +19,9 @@ import org.springframework.kafka.support.converter.BatchMessagingMessageConverte
 import org.springframework.kafka.support.converter.ByteArrayJsonMessageConverter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @EnableKafka
 @Configuration
@@ -32,6 +36,15 @@ public class KafkaConfig {
     private static final int SESSION_TIMEOUT_MS = 60 * 1000;       // 1m
     private static final int HEARTBEAT_INTERVAL_MS = 20 * 1000;    // 1/3 of session timeout
     private static final int MAX_POLL_INTERVAL_MS = 2 * 60 * 1000; // 2m
+
+    private static final int PARTITIONS = 3;
+    private static final int REPLICAS = 1;
+    private static final List<String> TOPIC_NAMES = List.of(
+            "user-action-events",
+            "product-like-metrics",
+            "product-stock-metrics",
+            "product-view-metrics"
+    );
 
     @Bean
     public ProducerFactory<Object, Object> producerFactory(KafkaProperties kafkaProperties) {
@@ -120,6 +133,17 @@ public class KafkaConfig {
         factory.setConcurrency(3);
         factory.setBatchListener(true);
         return factory;
+    }
+
+    // partition 3, replication 1
+    @Bean
+    public List<NewTopic> topics() {
+        return TOPIC_NAMES.stream()
+                .map(name -> TopicBuilder.name(name)
+                        .partitions(PARTITIONS)
+                        .replicas(REPLICAS)
+                        .build())
+                .collect(Collectors.toList());
     }
 
 }
