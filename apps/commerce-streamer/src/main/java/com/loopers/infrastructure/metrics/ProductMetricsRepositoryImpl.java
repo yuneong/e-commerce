@@ -1,0 +1,27 @@
+package com.loopers.infrastructure.metrics;
+
+import com.loopers.domain.metrics.ProductMetrics;
+import com.loopers.domain.metrics.ProductMetricsId;
+import com.loopers.domain.metrics.ProductMetricsRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class ProductMetricsRepositoryImpl implements ProductMetricsRepository {
+
+    private final ProductMetricsJpaRepository productMetricsJpaRepository;
+
+    @Override
+    public Optional<ProductMetrics> findById(ProductMetricsId id) {
+        return productMetricsJpaRepository.findById(id);
+    }
+
+    @Override
+    public ProductMetrics save(ProductMetrics productMetrics) {
+        return productMetricsJpaRepository.save(productMetrics);
+    }
+
+}

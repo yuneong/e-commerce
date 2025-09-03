@@ -4,6 +4,7 @@ import com.loopers.application.product.ProductCommand;
 import com.loopers.application.product.ProductFacade;
 import com.loopers.application.product.ProductInfo;
 import com.loopers.application.product.ProductListInfo;
+import com.loopers.infrastructure.kafka.producer.ProductViewedEventProducer;
 import com.loopers.interfaces.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController implements ProductV1ApiSpec{
 
     private final ProductFacade productFacade;
+    private final ProductViewedEventProducer productViewedEventProducer;
 
     @GetMapping("")
     @Override
@@ -45,6 +47,9 @@ public class ProductController implements ProductV1ApiSpec{
         ProductInfo productInfo = productFacade.getProductDetail(productId, userId);
         // result -> response
         ProductV1Dto.ProductDetailResponse response = ProductV1Dto.ProductDetailResponse.from(productInfo);
+
+        // kafka 집계 - 상세 조회수
+        productViewedEventProducer.sendProductViewedEvent(productId);
 
         return ApiResponse.success(response);
     }
