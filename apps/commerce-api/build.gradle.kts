@@ -20,6 +20,7 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+    testImplementation(testFixtures(project(":modules:kafka")))
 
     // resilience4j
     implementation("io.github.resilience4j:resilience4j-spring-boot3")

@@ -40,6 +40,13 @@ spring:
     activate:
       on-profile: local, test
 
+datasource:
+  mysql-jpa:
+    main:
+      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      username: application
+      password: application
+
 ---
 spring:
   config:
