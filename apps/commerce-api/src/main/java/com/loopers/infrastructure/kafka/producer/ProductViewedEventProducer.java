@@ -1,10 +1,13 @@
 package com.loopers.infrastructure.kafka.producer;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProductViewedEventProducer {
@@ -14,8 +17,14 @@ public class ProductViewedEventProducer {
     @Value("${kafka.topic.product-view-name}")
     private String productViewedTopic;
 
+    @Retry(name = "kafkaProducer", fallbackMethod = "ProductViewedFallback")
     public void sendProductViewedEvent(Long productId) {
         kafkaTemplate.send(productViewedTopic, productId.toString(), productId);
+    }
+
+    // fallback
+    public void ProductViewedFallback(Long productId, Object event, Throwable ex) {
+        log.error("Failed to send product view event after retries, productId={}", productId, ex);
     }
 
 }
