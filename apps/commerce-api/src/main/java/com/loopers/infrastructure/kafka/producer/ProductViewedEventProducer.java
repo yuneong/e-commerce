@@ -1,5 +1,6 @@
 package com.loopers.infrastructure.kafka.producer;
 
+import com.loopers.infrastructure.kafka.dto.ProductViewedDto;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,8 @@ public class ProductViewedEventProducer {
 
     @Retry(name = "kafkaProducer", fallbackMethod = "ProductViewedFallback")
     public void sendProductViewedEvent(Long productId) {
-        kafkaTemplate.send(productViewedTopic, productId.toString(), productId);
+        ProductViewedDto event = ProductViewedDto.of(productId);
+        kafkaTemplate.send(productViewedTopic, productId.toString(), event);
     }
 
     // fallback
