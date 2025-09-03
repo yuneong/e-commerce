@@ -27,6 +27,7 @@ public class ProductFacade {
         // event
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "PRODUCT_VIEWED",
+                userId,
                 ProductViewedEvent.of(products.getContent().stream().map(Product::getId).toList())
         ));
 
@@ -43,6 +44,7 @@ public class ProductFacade {
         // event
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "PRODUCT_DETAIL_VIEWED",
+                userId,
                 ProductViewedEvent.of(productId)
         ));
 

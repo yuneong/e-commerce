@@ -44,6 +44,7 @@ public class PaymentFacade {
         // event
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "PAYMENT_PROCESS",
+                command.userId(),
                 PaymentProcessEvent.of(
                         command.orderId(),
                         payment.getId(),

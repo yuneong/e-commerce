@@ -16,12 +16,13 @@ public record UserActionEnvelope<T>(
 
     public static <T>UserActionEnvelope of(
             String actionType,
+            String userId,
             T payload
     ) {
         return new UserActionEnvelope<>(
                 UUID.randomUUID().toString(),
                 MDC.get("traceId"),
-                MDC.get("userId"),
+                MDC.get("userId") == null ? userId : MDC.get("userId"),
                 actionType,
                 payload,
                 LocalDateTime.now()

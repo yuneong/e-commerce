@@ -42,6 +42,7 @@ public class LikeFacade {
             eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "like"));
             eventPublisher.publishEvent(UserActionEnvelope.of(
                     "PRODUCT_LIKED",
+                    user.getUserId(),
                     ProductLikedEvent.of(product.getId(), user.getUserId(), "like")
             ));
         }
@@ -64,6 +65,7 @@ public class LikeFacade {
             eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike"));
             eventPublisher.publishEvent(UserActionEnvelope.of(
                     "PRODUCT_UNLIKED",
+                    user.getUserId(),
                     ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike")
             ));
 

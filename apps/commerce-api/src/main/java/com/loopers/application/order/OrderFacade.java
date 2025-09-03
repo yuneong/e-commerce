@@ -52,6 +52,7 @@ public class OrderFacade {
         eventPublisher.publishEvent(new OrderSucceededEvent(user.getUserId(), order.getId()));
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "ORDER_PLACED",
+                user.getUserId(),
                 OrderPlacedEvent.of(order.getId(), totalPrice)
         ));
 
