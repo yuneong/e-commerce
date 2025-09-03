@@ -91,6 +91,9 @@ payment:
 pg:
   url: http://localhost:8082
 
+kafka:
+  topic:
+    user-action-name: user-action-events
 
 ---
 spring:

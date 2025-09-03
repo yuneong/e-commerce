@@ -24,6 +24,7 @@ import java.util.Map;
 public class KafkaConfig {
 
     public static final String BATCH_LISTENER = "BATCH_LISTENER_DEFAULT";
+    public static final String STRING_BATCH_LISTENER = "STRING_BATCH_LISTENER_DEFAULT";
 
     private static final int MAX_POLLING_SIZE = 3000;             // read 3000 msg
     private static final int FETCH_MIN_BYTES = (1024 * 1024);      // 1MB
@@ -76,4 +77,49 @@ public class KafkaConfig {
         factory.setBatchListener(true);
         return factory;
     }
+
+    // String
+
+    @Bean
+    public ProducerFactory<String, String> stringProducerFactory(KafkaProperties kafkaProperties) {
+        Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties());
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> stringKafkaTemplate(ProducerFactory<String, String> stringProducerFactory) {
+        return new KafkaTemplate<>(stringProducerFactory);
+    }
+
+    @Bean
+    public ConsumerFactory<String, String> stringConsumerFactory(KafkaProperties kafkaProperties) {
+        Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean(name = STRING_BATCH_LISTENER)
+    public ConcurrentKafkaListenerContainerFactory<String, String> stringBatchListenerContainerFactory(
+            KafkaProperties kafkaProperties
+    ) {
+        Map<String, Object> consumerConfig = new HashMap<>(kafkaProperties.buildConsumerProperties());
+        consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_POLLING_SIZE);
+        consumerConfig.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, FETCH_MIN_BYTES);
+        consumerConfig.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, FETCH_MAX_WAIT_MS);
+        consumerConfig.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, SESSION_TIMEOUT_MS);
+        consumerConfig.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, HEARTBEAT_INTERVAL_MS);
+        consumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, MAX_POLL_INTERVAL_MS);
+
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumerConfig));
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.setConcurrency(3);
+        factory.setBatchListener(true);
+        return factory;
+    }
+
 }
