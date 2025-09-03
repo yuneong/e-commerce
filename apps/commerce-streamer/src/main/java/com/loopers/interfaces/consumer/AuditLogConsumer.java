@@ -24,7 +24,7 @@ public class AuditLogConsumer {
 
     @KafkaListener(
             topics = {"user-action-events"},
-            groupId = "commerce-streamer",
+            groupId = "audit-log-group",
             containerFactory = KafkaConfig.STRING_BATCH_LISTENER
     )
     public void listen(List<ConsumerRecord<String, String>> records) {
@@ -41,8 +41,8 @@ public class AuditLogConsumer {
                 log.warn("eventId is blank, payload = {}", payload);
                 continue;
             }
-            log.info("@@@@@@@Received payload {}", payload);
-            log.info("@@@@@@@Received eventType {}", eventType);
+            log.info("@@@@ payload {}", payload);
+            log.info("@@@@ eventType {}", eventType);
 
             AuditLogCommand command = AuditLogCommand.of(payload, eventType);
             auditLogFacade.processAuditLog(command);
