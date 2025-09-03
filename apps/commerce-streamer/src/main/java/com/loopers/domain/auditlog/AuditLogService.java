@@ -3,6 +3,7 @@ package com.loopers.domain.auditlog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.auditlog.AuditLogCommand;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Transactional
     public void saveAuditLog(AuditLogCommand command) {
         // 기존 Map<String, Object>를 다시 db에 넣기 위해서 String으로 변환
         String payloadJson = "";

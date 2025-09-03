@@ -2,10 +2,12 @@ package com.loopers.interfaces.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loopers.application.metrics.ProductMetricsCommand;
 import com.loopers.interfaces.dto.ProductLikePayload;
 import com.loopers.application.metrics.ProductMetricsFacade;
 import com.loopers.config.kafka.KafkaConfig;
 import com.loopers.interfaces.dto.ProductStockPayload;
+import com.loopers.interfaces.dto.ProductViewPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -40,15 +42,18 @@ public class ProductMetricsConsumer {
         switch (topic) {
             case "product-like-metrics":
                 ProductLikePayload likePayload = objectMapper.readValue(payload, ProductLikePayload.class);
-                productMetricsFacade.processLikeMetrics(likePayload.productId(), likePayload.likeType());
+                ProductMetricsCommand likeCommand = ProductMetricsCommand.from(likePayload);
+                productMetricsFacade.processLikeMetrics(likeCommand);
                 break;
             case "product-stock-metrics":
                 ProductStockPayload stockPayload = objectMapper.readValue(payload, ProductStockPayload.class);
-                productMetricsFacade.processStockMetrics(stockPayload.productId(), stockPayload.stock(), stockPayload.changedType());
+                ProductMetricsCommand stockCommand = ProductMetricsCommand.from(stockPayload);
+                productMetricsFacade.processStockMetrics(stockCommand);
                 break;
             case "product-view-metrics":
-                Long productId = Long.parseLong(payload);
-                productMetricsFacade.processViewMetrics(productId);
+                ProductViewPayload viewPayload = objectMapper.readValue(payload, ProductViewPayload.class);
+                ProductMetricsCommand viewCommand = ProductMetricsCommand.from(viewPayload);
+                productMetricsFacade.processViewMetrics(viewCommand);
                 break;
         }
 

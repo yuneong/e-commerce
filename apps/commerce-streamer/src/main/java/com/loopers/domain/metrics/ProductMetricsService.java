@@ -2,6 +2,7 @@ package com.loopers.domain.metrics;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -13,6 +14,7 @@ public class ProductMetricsService {
 
     private final ProductMetricsRepository productMetricsRepository;
 
+    @Transactional
     public void processLikeMetrics(Long productId, String likeType, LocalDate date) {
         ProductMetrics metrics = productMetricsRepository.findById(ProductMetricsId.create(productId, date))
                 .orElseGet(() -> ProductMetrics.create(productId, date));
@@ -20,6 +22,7 @@ public class ProductMetricsService {
         productMetricsRepository.save(metrics);
     }
 
+    @Transactional
     public void processStockMetrics(Long productId, int quantity, String changedType, LocalDate date) {
         ProductMetrics metrics = productMetricsRepository.findById(ProductMetricsId.create(productId, date))
                 .orElseGet(() -> ProductMetrics.create(productId, date));
@@ -31,6 +34,7 @@ public class ProductMetricsService {
         productMetricsRepository.save(metrics);
     }
 
+    @Transactional
     public void processViewMetrics(Long productId, LocalDate date) {
         ProductMetrics metrics = productMetricsRepository.findById(ProductMetricsId.create(productId, date))
                 .orElseGet(() -> ProductMetrics.create(productId, date));
