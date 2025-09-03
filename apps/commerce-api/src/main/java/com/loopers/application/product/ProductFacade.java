@@ -37,7 +37,7 @@ public class ProductFacade {
 
     public ProductInfo getProductDetail(Long productId, String userId) {
         // service
-        Product product = productService.getProductDetail(productId);
+        Product product = productService.getProductDetailForCaching(productId);
 
         // 추후 로그인시 likedYn 추가
 
