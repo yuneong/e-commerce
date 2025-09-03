@@ -5,6 +5,7 @@ import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
+import com.loopers.domain.like.LikeStatus;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.event.ProductLikedEvent;
@@ -72,7 +73,8 @@ public class LikeFacade {
         }
 
         // info
-        return LikeInfo.of(savedLike.like().getLikedYn());
+        LikeStatus likedYn = (savedLike.like() == null) ? LikeStatus.N : savedLike.like().getLikedYn();
+        return LikeInfo.of(likedYn);
     }
 
     public LikeListInfo getLikeProducts(String userId) {
