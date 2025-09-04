@@ -31,9 +31,6 @@ public class ProductMetricsConsumer {
     )
     public void listen(String payload, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) throws JsonProcessingException {
 
-        log.info("@@@@ payload {}", payload);
-        log.info("@@@@ topic {}", topic);
-
         if (topic == null) {
             log.warn("Received null topic for payload: {}", payload);
             return;
