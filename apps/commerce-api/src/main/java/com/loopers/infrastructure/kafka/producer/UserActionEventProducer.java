@@ -40,8 +40,8 @@ public class UserActionEventProducer {
     }
 
     // fallback
-    public void userActionFallback(Object event, Throwable ex) {
-        log.error("Failed to send user action event after retries", ex);
+    public void userActionFallback(UserActionEnvelope<?> event, Throwable ex) {
+        log.error("Failed to send user action event after retries, event={}", event, ex);
     }
 
 }

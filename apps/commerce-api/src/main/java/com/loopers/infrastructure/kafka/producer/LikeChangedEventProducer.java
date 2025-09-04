@@ -18,15 +18,15 @@ public class LikeChangedEventProducer {
     @Value("${kafka.topic.product-like-name}")
     private String likeChangedTopic;
 
-    @Retry(name = "kafkaProducer", fallbackMethod = "LikeChangedFallback")
+    @Retry(name = "kafkaProducer", fallbackMethod = "likeChangedFallback")
     public void sendLikeChangedEvent(Long productId, String likeType) {
         LikeChangedDto event = LikeChangedDto.of(productId, likeType);
         kafkaTemplate.send(likeChangedTopic, productId.toString(), event);
     }
 
     // fallback
-    public void LikeChangedFallback(Long productId, Object event, Throwable ex) {
-        log.error("Failed to send like changed event after retries, productId={}", productId, ex);
+    public void likeChangedFallback(Long productId, String likeType, Throwable ex) {
+        log.error("Failed to send like-changed event after retries, productId={}, likeType={}", productId, likeType, ex);
     }
 
 }

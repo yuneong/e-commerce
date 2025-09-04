@@ -18,14 +18,14 @@ public class ProductViewedEventProducer {
     @Value("${kafka.topic.product-view-name}")
     private String productViewedTopic;
 
-    @Retry(name = "kafkaProducer", fallbackMethod = "ProductViewedFallback")
+    @Retry(name = "kafkaProducer", fallbackMethod = "productViewedFallback")
     public void sendProductViewedEvent(Long productId) {
         ProductViewedDto event = ProductViewedDto.of(productId);
         kafkaTemplate.send(productViewedTopic, productId.toString(), event);
     }
 
     // fallback
-    public void ProductViewedFallback(Long productId, Object event, Throwable ex) {
+    public void productViewedFallback(Long productId, Throwable ex) {
         log.error("Failed to send product view event after retries, productId={}", productId, ex);
     }
 
