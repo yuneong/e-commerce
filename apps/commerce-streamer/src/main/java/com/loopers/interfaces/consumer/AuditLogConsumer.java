@@ -21,7 +21,6 @@ public class AuditLogConsumer {
 
     private final AuditLogFacade auditLogFacade;
 
-
     @KafkaListener(
             topics = {"user-action-events"},
             groupId = "audit-log-group",
@@ -30,19 +29,17 @@ public class AuditLogConsumer {
     public void listen(List<ConsumerRecord<String, String>> records) {
         for (ConsumerRecord<String, String> record : records) {
             String payload = record.value();
-            String eventId = record.key();
+            String userId = record.key();
 
             String eventType = "";
             if (record.headers().lastHeader("eventType") != null) {
                 eventType = new String(record.headers().lastHeader("eventType").value(), StandardCharsets.UTF_8);
             }
 
-            if (StringUtils.isBlank(eventId)) {
-                log.warn("eventId is blank, payload = {}", payload);
+            if (StringUtils.isBlank(userId)) {
+                log.warn("userId is blank, payload = {}", payload);
                 continue;
             }
-            log.info("@@@@ payload {}", payload);
-            log.info("@@@@ eventType {}", eventType);
 
             AuditLogCommand command = AuditLogCommand.of(payload, eventType);
             auditLogFacade.processAuditLog(command);
