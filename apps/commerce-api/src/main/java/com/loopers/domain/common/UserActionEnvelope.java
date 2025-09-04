@@ -21,7 +21,7 @@ public record UserActionEnvelope<T>(
     ) {
         return new UserActionEnvelope<>(
                 UUID.randomUUID().toString(),
-                MDC.get("traceId"),
+                MDC.get("traceId") == null ? UUID.randomUUID().toString() : MDC.get("traceId"),
                 MDC.get("userId") == null ? userId : MDC.get("userId"),
                 actionType,
                 payload,
