@@ -30,7 +30,7 @@ public class UserActionEventProducer {
             String kafkaJson = objectMapper.writeValueAsString(event);
 
             ProducerRecord<String, String> record =
-                    new ProducerRecord<>(userActionTopic, event.eventId(), kafkaJson);
+                    new ProducerRecord<>(userActionTopic, event.userId(), kafkaJson);
             record.headers().add("eventType", "userAction".getBytes(StandardCharsets.UTF_8));
 
             kafkaTemplate.send(record);
