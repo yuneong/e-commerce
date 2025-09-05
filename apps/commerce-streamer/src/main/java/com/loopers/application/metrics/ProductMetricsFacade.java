@@ -6,6 +6,7 @@ import com.loopers.domain.metrics.ProductMetricsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 @Component
@@ -14,7 +15,12 @@ public class ProductMetricsFacade {
 
     private final ProductMetricsService productMetricsService;
     private final EventHandledService eventHandledService;
-    private final static LocalDate today = LocalDate.now();
+    private final Clock clock;
+
+    public LocalDate today() {
+        return LocalDate.now(clock);
+    }
+
     private final static EventHandledDomainType DOMAIN_TYPE = EventHandledDomainType.METRICS;
 
     public void processLikeMetrics(ProductMetricsCommand command) {
@@ -22,7 +28,8 @@ public class ProductMetricsFacade {
             return;
         }
 
-        productMetricsService.processLikeMetrics(command.productId(), command.likeType(), today);
+        LocalDate date = today();
+        productMetricsService.processLikeMetrics(command.productId(), command.likeType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
     }
@@ -32,7 +39,8 @@ public class ProductMetricsFacade {
             return;
         }
 
-        productMetricsService.processStockMetrics(command.productId(), command.stock(), command.changedType(), today);
+        LocalDate date = today();
+        productMetricsService.processStockMetrics(command.productId(), command.stock(), command.changedType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
     }
@@ -42,7 +50,8 @@ public class ProductMetricsFacade {
             return;
         }
 
-        productMetricsService.processViewMetrics(command.productId(), today);
+        LocalDate date = today();
+        productMetricsService.processViewMetrics(command.productId(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
     }

@@ -8,4 +8,6 @@ public interface AuditLogRepository {
 
     List<AuditLog> findAll();
 
+    boolean existsByEventId(String eventId);
+
 }

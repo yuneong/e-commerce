@@ -23,4 +23,9 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
         return auditLogJpaRepository.findAll();
     }
 
+    @Override
+    public boolean existsByEventId(String eventId) {
+        return auditLogJpaRepository.existsByEventId(eventId);
+    }
+
 }
