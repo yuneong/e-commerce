@@ -15,6 +15,8 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 
 @Slf4j
 @Component
@@ -29,29 +31,37 @@ public class ProductMetricsConsumer {
             groupId = "product-metrics-group",
             containerFactory = KafkaConfig.STRING_BATCH_LISTENER
     )
-    public void listen(String payload, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) throws JsonProcessingException {
+    public void listen(
+            List<String> payloads,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics
+    ) throws JsonProcessingException {
 
-        if (topic == null) {
-            log.warn("Received null topic for payload: {}", payload);
-            return;
-        }
+        for (int i = 0; i < payloads.size(); i++) {
+            String payload = payloads.get(i);
+            String topic = topics.get(i);
 
-        switch (topic) {
-            case "product-like-metrics":
-                ProductLikePayload likePayload = objectMapper.readValue(payload, ProductLikePayload.class);
-                ProductMetricsCommand likeCommand = ProductMetricsCommand.from(likePayload);
-                productMetricsFacade.processLikeMetrics(likeCommand);
-                break;
-            case "product-stock-metrics":
-                ProductStockPayload stockPayload = objectMapper.readValue(payload, ProductStockPayload.class);
-                ProductMetricsCommand stockCommand = ProductMetricsCommand.from(stockPayload);
-                productMetricsFacade.processStockMetrics(stockCommand);
-                break;
-            case "product-view-metrics":
-                ProductViewPayload viewPayload = objectMapper.readValue(payload, ProductViewPayload.class);
-                ProductMetricsCommand viewCommand = ProductMetricsCommand.from(viewPayload);
-                productMetricsFacade.processViewMetrics(viewCommand);
-                break;
+            if (topic == null) {
+                log.warn("Received null topic for payload: {}", payload);
+                return;
+            }
+
+            switch (topic) {
+                case "product-like-metrics":
+                    ProductLikePayload likePayload = objectMapper.readValue(payload, ProductLikePayload.class);
+                    ProductMetricsCommand likeCommand = ProductMetricsCommand.from(likePayload);
+                    productMetricsFacade.processLikeMetrics(likeCommand);
+                    break;
+                case "product-stock-metrics":
+                    ProductStockPayload stockPayload = objectMapper.readValue(payload, ProductStockPayload.class);
+                    ProductMetricsCommand stockCommand = ProductMetricsCommand.from(stockPayload);
+                    productMetricsFacade.processStockMetrics(stockCommand);
+                    break;
+                case "product-view-metrics":
+                    ProductViewPayload viewPayload = objectMapper.readValue(payload, ProductViewPayload.class);
+                    ProductMetricsCommand viewCommand = ProductMetricsCommand.from(viewPayload);
+                    productMetricsFacade.processViewMetrics(viewCommand);
+                    break;
+            }
         }
 
     }

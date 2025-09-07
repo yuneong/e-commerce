@@ -7,6 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -22,7 +24,7 @@ class ProductMetricsConsumerTest {
         String payload = """
             {"eventId":"evt-1", "productId":100, "likeType":"like"}
         """;
-        consumer.listen(payload, "product-like-metrics");
+        consumer.listen(List.of(payload), List.of("product-like-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class); // productMetricsCommand 타입 인자 캡처할 수 있는 객체 생성
         verify(facade, times(1)).processLikeMetrics(captor.capture()); // facade의 processLikeMetrics 메서드가 1회 호출되었는지 검증, 호출 시 전달된 인자를 captor가 캡처
@@ -39,7 +41,7 @@ class ProductMetricsConsumerTest {
         String payload = """
             {"eventId":"evt-2", "productId":101, "stock":3, "changedType":"SUCCESS"}
         """;
-        consumer.listen(payload, "product-stock-metrics");
+        consumer.listen(List.of(payload), List.of("product-stock-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class);
         verify(facade, times(1)).processStockMetrics(captor.capture());
@@ -56,7 +58,7 @@ class ProductMetricsConsumerTest {
         String payload = """
             {"eventId":"evt-3", "productId":102}
         """;
-        consumer.listen(payload, "product-view-metrics");
+        consumer.listen(List.of(payload), List.of("product-view-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class);
         verify(facade, times(1)).processViewMetrics(captor.capture());
@@ -72,7 +74,7 @@ class ProductMetricsConsumerTest {
             {"eventId":"evt-4", "productId":103}
         """;
 
-        consumer.listen(payload, null);
+        consumer.listen(List.of(payload), null);
 
         verifyNoInteractions(facade); // facade가 호출되지 않았는지 검증
     }
@@ -84,7 +86,7 @@ class ProductMetricsConsumerTest {
             {"eventId":"evt-5", "productId":104}
         """;
 
-        consumer.listen(payload, "unknown-topic");
+        consumer.listen(List.of(payload), List.of("unknown-topic"));
 
         verifyNoInteractions(facade);
     }
