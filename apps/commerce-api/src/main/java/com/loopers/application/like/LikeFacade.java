@@ -5,6 +5,7 @@ import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeChange;
 import com.loopers.domain.like.LikeService;
+import com.loopers.domain.like.LikeStatus;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.event.ProductLikedEvent;
@@ -42,6 +43,7 @@ public class LikeFacade {
             eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "like"));
             eventPublisher.publishEvent(UserActionEnvelope.of(
                     "PRODUCT_LIKED",
+                    user.getUserId(),
                     ProductLikedEvent.of(product.getId(), user.getUserId(), "like")
             ));
         }
@@ -64,13 +66,15 @@ public class LikeFacade {
             eventPublisher.publishEvent(ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike"));
             eventPublisher.publishEvent(UserActionEnvelope.of(
                     "PRODUCT_UNLIKED",
+                    user.getUserId(),
                     ProductLikedEvent.of(product.getId(), user.getUserId(), "unlike")
             ));
 
         }
 
         // info
-        return LikeInfo.of(savedLike.like().getLikedYn());
+        LikeStatus likedYn = (savedLike.like() == null) ? LikeStatus.N : savedLike.like().getLikedYn();
+        return LikeInfo.of(likedYn);
     }
 
     public LikeListInfo getLikeProducts(String userId) {

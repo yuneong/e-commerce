@@ -53,9 +53,12 @@ public class LikeService {
 
     @Transactional
     public LikeChange unLike(Product product, User user) {
-        Like like = likeRepository.findByProductAndUser(product, user)
-                .orElseThrow(() -> new IllegalArgumentException("Like not found for product and user"));
+        Optional<Like> likeOptional = likeRepository.findByProductAndUser(product, user);
+        if (likeOptional.isEmpty()) {
+            return new LikeChange(null, false);
+        }
 
+        Like like = likeOptional.get();
         String before = like.getLikedYn().toString();
         like.unLike();
         boolean changed = !"N".equals(before);

@@ -244,17 +244,21 @@ class LikeServiceIntegrationTest {
             );
         }
 
-        @DisplayName("좋아요가 없는 상품을 취소하면 예외가 발생한다.")
+        @DisplayName("좋아요가 없는 상품을 취소해도 아무 예외 없이 변화 없이 정상 동작한다.")
         @Test
-        void throwsIllegalArgumentException_whenUnLikeNonLikedProduct() {
+        void unLikeNonLikedProduct_shouldNotThrowException_andChangedIsFalse() {
             // given
             Product product = testProductList.get(2); // 좋아요가 등록되지 않은 상품
             Optional<User> user = userRepository.findByUserId("user1");
+            assertThat(user).isPresent();
 
-            // when & then
-            assertThrows(IllegalArgumentException.class, () -> {
-                likeService.unLike(product, user.get());
-            });
+            // when
+            LikeChange result = likeService.unLike(product, user.get());
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.changed()).isFalse(); // 변화 없음
+            assertThat(result.like()).isNull(); // Like 객체 없음
         }
     }
 

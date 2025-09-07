@@ -6,6 +6,9 @@ import com.loopers.application.product.ProductCommand;
 import com.loopers.domain.order.OrderItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +29,7 @@ public class ProductService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     @Value("${cache.version.product}") public static String CACHE_VERSION;
+    private final CacheManager cacheManager;
 
     public Page<Product> getProducts(ProductCommand command) {
         // command -> domain
@@ -80,9 +84,16 @@ public class ProductService {
     public void checkAndDecreaseStock(List<OrderItem> orderItems) {
         for (OrderItem orderItem : orderItems) {
             Product product = orderItem.getProduct();
-            product.decreaseStock(orderItem.getQuantity());
+            int stock = product.decreaseStock(orderItem.getQuantity());
 
             productRepository.save(product); // 재고 차감 후 저장
+
+            if (stock == 0) { // 재고 0일때 캐시 삭제
+                Cache cache = cacheManager.getCache("product");
+                if (cache != null) {
+                    cache.evict(CACHE_VERSION + ":detail:" + product.getId());
+                }
+            }
         }
     }
 
@@ -95,6 +106,7 @@ public class ProductService {
             maxAttempts = 3,
             backoff = @Backoff(delay = 10, multiplier = 2.0, maxDelay = 200)
     )
+    @CacheEvict(value = "product", key = "@productService.CACHE_VERSION + ':detail:' + #productId")
     public Long updateLikeCount(Long productId, String likeType) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));

@@ -27,6 +27,7 @@ public class ProductFacade {
         // event
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "PRODUCT_VIEWED",
+                userId,
                 ProductViewedEvent.of(products.getContent().stream().map(Product::getId).toList())
         ));
 
@@ -36,13 +37,14 @@ public class ProductFacade {
 
     public ProductInfo getProductDetail(Long productId, String userId) {
         // service
-        Product product = productService.getProductDetail(productId);
+        Product product = productService.getProductDetailForCaching(productId);
 
         // 추후 로그인시 likedYn 추가
 
         // event
         eventPublisher.publishEvent(UserActionEnvelope.of(
                 "PRODUCT_DETAIL_VIEWED",
+                userId,
                 ProductViewedEvent.of(productId)
         ));
 

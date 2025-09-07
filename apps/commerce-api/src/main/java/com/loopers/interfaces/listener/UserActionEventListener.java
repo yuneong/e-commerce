@@ -1,7 +1,7 @@
 package com.loopers.interfaces.listener;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.domain.common.UserActionEnvelope;
+import com.loopers.infrastructure.kafka.producer.UserActionEventProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -12,17 +12,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserActionEventListener {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserActionEventProducer userActionEventProducer;
 
     @EventListener
     public void handle(UserActionEnvelope<?> event) {
-        try {
-            String payloadJson = objectMapper.writeValueAsString(event.payload());
+        // 사용자 행위 로깅
+//            String payloadJson = objectMapper.writeValueAsString(event.payload());
+//            log.info("actionTypetion={} payload={} at={}", event.actionType(), payloadJson, event.occurredAt());
 
-            log.info("action={} payload={} at={}", event.actionType(), payloadJson, event.occurredAt());
-        } catch (Exception e) {
-            log.error("Failed to log user action: {}", event, e);
-        }
+        // 카프카 사용자 행위 로깅
+        userActionEventProducer.sendUserActionEvent(event);
     }
 
 }
