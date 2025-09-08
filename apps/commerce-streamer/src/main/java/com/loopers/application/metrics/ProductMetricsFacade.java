@@ -3,6 +3,7 @@ package com.loopers.application.metrics;
 import com.loopers.domain.eventHandled.EventHandledDomainType;
 import com.loopers.domain.eventHandled.EventHandledService;
 import com.loopers.domain.metrics.ProductMetricsService;
+import com.loopers.domain.ranking.RankingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ public class ProductMetricsFacade {
 
     private final ProductMetricsService productMetricsService;
     private final EventHandledService eventHandledService;
+    private final RankingService rankingService;
     private final Clock clock;
 
     public LocalDate today() {
@@ -32,6 +34,9 @@ public class ProductMetricsFacade {
         productMetricsService.processLikeMetrics(command.productId(), command.likeType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
+
+        // 랭킹
+        rankingService.recordLike(command.productId());
     }
 
     public void processStockMetrics(ProductMetricsCommand command) {
@@ -43,6 +48,9 @@ public class ProductMetricsFacade {
         productMetricsService.processStockMetrics(command.productId(), command.stock(), command.changedType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
+
+        // 랭킹
+        rankingService.recordOrder(command.productId());
     }
 
     public void processViewMetrics(ProductMetricsCommand command) {
@@ -54,6 +62,9 @@ public class ProductMetricsFacade {
         productMetricsService.processViewMetrics(command.productId(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
+
+        // 랭킹
+        rankingService.recordView(command.productId());
     }
 
 }

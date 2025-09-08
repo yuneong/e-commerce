@@ -30,6 +30,12 @@ spring:
       - logging.yml
       - monitoring.yml
 
+ranking:
+  score:
+    like: 2.0
+    order: 6.0
+    view: 1.0
+
 ---
 spring:
   config:
