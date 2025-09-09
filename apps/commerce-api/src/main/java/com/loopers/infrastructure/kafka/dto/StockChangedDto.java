@@ -6,18 +6,21 @@ public record StockChangedDto(
         String eventId,
         Long productId,
         int stock,
+        int price,
         String changedType
 ) {
 
     public static StockChangedDto of(
             Long productId,
             int stock,
+            int price,
             String changedType
     ) {
         return new StockChangedDto(
                 UUID.randomUUID().toString(),
                 productId,
                 stock,
+                price,
                 changedType
         );
     }

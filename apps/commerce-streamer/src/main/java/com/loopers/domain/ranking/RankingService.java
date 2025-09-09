@@ -24,15 +24,18 @@ public class RankingService {
     }
 
     public void recordLike(Long productId) {
-        rankingRepository.increaseScore(todayKey(), productId, scorePolicy.scoreFor(RankingEventType.LIKE));
+        double score = scorePolicy.scoreFor(RankingEventType.LIKE, RankingScorePolicy.RankingContext.empty());
+        rankingRepository.increaseScore(todayKey(), productId, score);
     }
 
-    public void recordOrder(Long productId) {
-        rankingRepository.increaseScore(todayKey(), productId, scorePolicy.scoreFor(RankingEventType.ORDER));
+    public void recordOrder(Long productId, int amount, int price) {
+        double score = scorePolicy.scoreFor(RankingEventType.ORDER, RankingScorePolicy.RankingContext.order(price, amount));
+        rankingRepository.increaseScore(todayKey(), productId, score);
     }
 
     public void recordView(Long productId) {
-        rankingRepository.increaseScore(todayKey(), productId, scorePolicy.scoreFor(RankingEventType.VIEW));
+        double score = scorePolicy.scoreFor(RankingEventType.VIEW, RankingScorePolicy.RankingContext.empty());
+        rankingRepository.increaseScore(todayKey(), productId, score);
     }
 
     public void setTodayRankingExpire() {

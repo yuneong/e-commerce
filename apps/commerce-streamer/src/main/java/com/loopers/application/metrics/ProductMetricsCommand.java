@@ -9,7 +9,8 @@ public record ProductMetricsCommand(
         Long productId,
         MetricsType metricsType, // "LIKE", "STOCK", "VIEW"
         String likeType,         // only for LIKE
-        Integer stock,           // only for STOCK
+        int stock,           // only for STOCK
+        int price,           // only for STOCK
         String changedType       // only for STOCK
 ) {
 
@@ -19,7 +20,8 @@ public record ProductMetricsCommand(
                 payload.productId(),
                 MetricsType.LIKE,
                 payload.likeType(),
-                null,
+                0,
+                0,
                 null
         );
     }
@@ -31,6 +33,7 @@ public record ProductMetricsCommand(
                 MetricsType.STOCK,
                 null,
                 payload.stock(),
+                payload.price(),
                 payload.changedType()
         );
     }
@@ -41,7 +44,8 @@ public record ProductMetricsCommand(
                 payload.productId(),
                 MetricsType.VIEW,
                 null,
-                null,
+                0,
+                0,
                 null
         );
     }

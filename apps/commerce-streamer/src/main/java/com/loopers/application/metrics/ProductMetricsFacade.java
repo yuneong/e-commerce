@@ -50,7 +50,7 @@ public class ProductMetricsFacade {
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
 
         // 랭킹
-        rankingService.recordOrder(command.productId());
+        rankingService.recordOrder(command.productId(), command.stock(), command.price());
     }
 
     public void processViewMetrics(ProductMetricsCommand command) {

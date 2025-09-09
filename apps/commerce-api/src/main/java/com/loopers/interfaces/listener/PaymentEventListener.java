@@ -50,6 +50,7 @@ public class PaymentEventListener {
             stockChangedEventProducer.sendStockChangedEvent(
                     item.getProduct().getId(),
                     item.getQuantity(),
+                    item.getPrice(),
                     "SUCCESS"
             );
         }
@@ -79,6 +80,7 @@ public class PaymentEventListener {
             stockChangedEventProducer.sendStockChangedEvent(
                     item.getProduct().getId(),
                     item.getQuantity(),
+                    item.getPrice(),
                     "FAIL"
             );
         }
