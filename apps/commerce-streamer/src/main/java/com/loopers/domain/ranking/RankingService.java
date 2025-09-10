@@ -45,10 +45,6 @@ public class RankingService {
         rankingRepository.increaseScore(todayKey(), productId, score);
     }
 
-    public void setTodayRankingExpire() {
-        rankingRepository.expire(buildKey(LocalDate.now()), 2 * 24 * 60 * 60); // 2일
-    }
-
     public void processRanking(Map<Long, MetricsCounter> metricsCounters) {
         String key = todayKey();
 
@@ -67,6 +63,9 @@ public class RankingService {
         });
 
         rankingRepository.saveAllScores(key, tuples);
+
+        // TTL 설정
+        rankingRepository.expire(key, 2 * 24 * 60 * 60); // 2일
     }
 
 }
