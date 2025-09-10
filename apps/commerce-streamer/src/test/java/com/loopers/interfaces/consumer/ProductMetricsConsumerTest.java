@@ -3,6 +3,7 @@ package com.loopers.interfaces.consumer;
 import com.loopers.application.metrics.ProductMetricsFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.metrics.ProductMetricsCommand;
+import com.loopers.application.ranking.RankingFacade;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,9 +15,10 @@ import static org.mockito.Mockito.*;
 
 class ProductMetricsConsumerTest {
 
-    private final ProductMetricsFacade facade = mock(ProductMetricsFacade.class);
+    private final ProductMetricsFacade metricsFacade = mock(ProductMetricsFacade.class);
+    private final RankingFacade rankingFacade = mock(RankingFacade.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ProductMetricsConsumer consumer = new ProductMetricsConsumer(facade, objectMapper);
+    private final ProductMetricsConsumer consumer = new ProductMetricsConsumer(metricsFacade, objectMapper, rankingFacade);
 
     @Test
     @DisplayName("like 토픽 → JSON 파싱 → Facade.processLikeMetrics 호출")
@@ -27,7 +29,7 @@ class ProductMetricsConsumerTest {
         consumer.listen(List.of(payload), List.of("product-like-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class); // productMetricsCommand 타입 인자 캡처할 수 있는 객체 생성
-        verify(facade, times(1)).processLikeMetrics(captor.capture()); // facade의 processLikeMetrics 메서드가 1회 호출되었는지 검증, 호출 시 전달된 인자를 captor가 캡처
+        verify(metricsFacade, times(1)).processLikeMetrics(captor.capture()); // facade의 processLikeMetrics 메서드가 1회 호출되었는지 검증, 호출 시 전달된 인자를 captor가 캡처
         ProductMetricsCommand cmd = captor.getValue(); // captor가 캡처한 인자 가져오기
 
         assertThat(cmd.eventId()).isEqualTo("evt-1");
@@ -44,7 +46,7 @@ class ProductMetricsConsumerTest {
         consumer.listen(List.of(payload), List.of("product-stock-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class);
-        verify(facade, times(1)).processStockMetrics(captor.capture());
+        verify(metricsFacade, times(1)).processStockMetrics(captor.capture());
         ProductMetricsCommand cmd = captor.getValue();
 
         assertThat(cmd.productId()).isEqualTo(101L);
@@ -61,7 +63,7 @@ class ProductMetricsConsumerTest {
         consumer.listen(List.of(payload), List.of("product-view-metrics"));
 
         ArgumentCaptor<ProductMetricsCommand> captor = ArgumentCaptor.forClass(ProductMetricsCommand.class);
-        verify(facade, times(1)).processViewMetrics(captor.capture());
+        verify(metricsFacade, times(1)).processViewMetrics(captor.capture());
         ProductMetricsCommand cmd = captor.getValue();
 
         assertThat(cmd.productId()).isEqualTo(102L);
@@ -76,7 +78,7 @@ class ProductMetricsConsumerTest {
 
         consumer.listen(List.of(payload), null);
 
-        verifyNoInteractions(facade); // facade가 호출되지 않았는지 검증
+        verifyNoInteractions(metricsFacade); // facade가 호출되지 않았는지 검증
     }
 
     @Test
@@ -88,7 +90,7 @@ class ProductMetricsConsumerTest {
 
         consumer.listen(List.of(payload), List.of("unknown-topic"));
 
-        verifyNoInteractions(facade);
+        verifyNoInteractions(metricsFacade);
     }
 
 }
