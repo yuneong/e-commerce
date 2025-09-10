@@ -3,7 +3,10 @@ package com.loopers.infrastructure.ranking;
 import com.loopers.domain.ranking.RankingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 
 @Component
@@ -21,4 +24,10 @@ public class RedisRankingRepositoryImpl implements RankingRepository {
     public void expire(String key, long ttlSeconds) {
         redisTemplate.expire(key, java.time.Duration.ofSeconds(ttlSeconds));
     }
+
+    @Override
+    public void saveAllScores(String key, Set<ZSetOperations.TypedTuple<String>> tuples) {
+        redisTemplate.opsForZSet().add(key, tuples);
+    }
+
 }

@@ -1,11 +1,18 @@
 package com.loopers.domain.ranking;
 
+import com.loopers.application.metrics.MetricsCounter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +47,26 @@ public class RankingService {
 
     public void setTodayRankingExpire() {
         rankingRepository.expire(buildKey(LocalDate.now()), 2 * 24 * 60 * 60); // 2일
+    }
+
+    public void processRanking(Map<Long, MetricsCounter> metricsCounters) {
+        String key = todayKey();
+
+        Map<Long, Double> scoreMap = new HashMap<>();
+
+        metricsCounters.forEach((productId, metricsCounter) -> {
+            double score = RankingCalculator.weightedSum(metricsCounter);
+            scoreMap.put(productId, score);
+        });
+
+        // Redis ZSet 저장 (TypedTuple 사용)
+        Set<ZSetOperations.TypedTuple<String>> tuples = new HashSet<>();
+
+        scoreMap.forEach((productId, score) -> {
+            tuples.add(new DefaultTypedTuple<>(productId.toString(), score));
+        });
+
+        rankingRepository.saveAllScores(key, tuples);
     }
 
 }

@@ -25,46 +25,52 @@ public class ProductMetricsFacade {
 
     private final static EventHandledDomainType DOMAIN_TYPE = EventHandledDomainType.METRICS;
 
-    public void processLikeMetrics(ProductMetricsCommand command) {
+    public int processLikeMetrics(ProductMetricsCommand command) {
         if (eventHandledService.isEventHandled(command.eventId())) {
-            return;
+            return 0;
         }
 
         LocalDate date = today();
-        productMetricsService.processLikeMetrics(command.productId(), command.likeType(), date);
+        int likeMetrics = productMetricsService.processLikeMetrics(command.productId(), command.likeType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
 
         // 랭킹
         rankingService.recordLike(command.productId());
+
+        return likeMetrics;
     }
 
-    public void processStockMetrics(ProductMetricsCommand command) {
+    public int processStockMetrics(ProductMetricsCommand command) {
         if (eventHandledService.isEventHandled(command.eventId())) {
-            return;
+            return 0;
         }
 
         LocalDate date = today();
-        productMetricsService.processStockMetrics(command.productId(), command.stock(), command.changedType(), date);
+        int stockMetrics = productMetricsService.processStockMetrics(command.productId(), command.stock(), command.changedType(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
 
         // 랭킹
         rankingService.recordOrder(command.productId(), command.stock(), command.price());
+
+        return stockMetrics;
     }
 
-    public void processViewMetrics(ProductMetricsCommand command) {
+    public int processViewMetrics(ProductMetricsCommand command) {
         if (eventHandledService.isEventHandled(command.eventId())) {
-            return;
+            return 0;
         }
 
         LocalDate date = today();
-        productMetricsService.processViewMetrics(command.productId(), date);
+        int viewMetrics = productMetricsService.processViewMetrics(command.productId(), date);
 
         eventHandledService.saveEventHandled(command.eventId(), DOMAIN_TYPE, command.metricsType().toString());
 
         // 랭킹
         rankingService.recordView(command.productId());
+
+        return viewMetrics;
     }
 
 }
