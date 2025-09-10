@@ -19,15 +19,15 @@ public class StockChangedEventProducer {
     private String stockChangedTopic;
 
     @Retry(name = "kafkaProducer", fallbackMethod = "stockChangedFallback")
-    public void sendStockChangedEvent(Long productId, int stock, int price,  String changedType) {
-        StockChangedDto event = StockChangedDto.of(productId, stock, price, changedType);
+    public void sendStockChangedEvent(Long productId, int stock,  String changedType) {
+        StockChangedDto event = StockChangedDto.of(productId, stock, changedType);
         kafkaTemplate.send(stockChangedTopic, productId.toString(), event);
     }
 
     // fallback
-    public void stockChangedFallback(Long productId, int stock, int price, String changedType, Throwable ex) {
-        log.error("Failed to send stock-changed event after retries, productId={}, stock={}, price={}, changedType={}",
-                productId, stock, price, changedType, ex);
+    public void stockChangedFallback(Long productId, int stock, String changedType, Throwable ex) {
+        log.error("Failed to send stock-changed event after retries, productId={}, stock={}, changedType={}",
+                productId, stock, changedType, ex);
     }
 
 }
