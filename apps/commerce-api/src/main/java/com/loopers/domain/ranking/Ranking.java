@@ -8,10 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Ranking {
 
-    // productId
-    // productName
-    // rank
-
     private Long productId;
     private Double score;
 
