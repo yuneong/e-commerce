@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Set;
 
 
@@ -21,8 +22,8 @@ public class RedisRankingRepositoryImpl implements RankingRepository {
     }
 
     @Override
-    public void expire(String key, long ttlSeconds) {
-        redisTemplate.expire(key, java.time.Duration.ofSeconds(ttlSeconds));
+    public void expire(String key, Duration ttlSeconds) {
+        redisTemplate.expire(key, ttlSeconds);
     }
 
     @Override

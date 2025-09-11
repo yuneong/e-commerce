@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class RankingService {
         rankingRepository.saveAllScores(key, tuples);
 
         // TTL 설정
-        rankingRepository.expire(key, 2 * 24 * 60 * 60); // 2일
+        rankingRepository.expire(key, Duration.ofDays(2));
     }
 
 }
