@@ -11,10 +11,11 @@ public record ProductInfo(
         int price,
         Long likeCount,
         Long brandId,
-        String brandName
+        String brandName,
+        Long rank
 ) {
 
-    public static ProductInfo from(Product product) {
+    public static ProductInfo from(Product product, Long rank) {
         return new ProductInfo(
                 product.getId(),
                 product.getName(),
@@ -23,7 +24,8 @@ public record ProductInfo(
                 product.getPrice(),
                 product.getLikeCount(),
                 product.getBrand().getId(),
-                product.getBrand().getName()
+                product.getBrand().getName(),
+                rank
         );
     }
 
