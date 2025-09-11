@@ -146,4 +146,8 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    public List<Product> getProductsByIdIn(List<Long> productIds) {
+        return productRepository.findAllByIdIn(productIds);
+    }
+
 }

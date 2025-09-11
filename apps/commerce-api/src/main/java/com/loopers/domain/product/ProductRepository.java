@@ -24,4 +24,6 @@ public interface ProductRepository {
 
     List<Product> findByAll();
 
+    List<Product> findAllByIdIn(List<Long> productIds);
+
 }
