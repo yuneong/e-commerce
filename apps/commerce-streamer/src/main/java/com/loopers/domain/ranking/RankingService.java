@@ -17,15 +17,20 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RankingService {
 
-    public final RankingRepository rankingRepository;
+    private final RankingRepository rankingRepository;
+    private final RankingCalculator rankingCalculator;
 
     public void processRanking(Map<Long, MetricsCounter> metricsCounters) {
+        if (metricsCounters == null || metricsCounters.isEmpty()) {
+            return;
+        }
+
         String key = RedisKeyGenerator.todayKey("ranking:all:");
 
         Map<Long, Double> scoreMap = new HashMap<>();
 
         metricsCounters.forEach((productId, metricsCounter) -> {
-            double score = RankingCalculator.weightedSum(metricsCounter);
+            double score = rankingCalculator.weightedSum(metricsCounter);
             scoreMap.put(productId, score);
         });
 

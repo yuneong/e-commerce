@@ -43,6 +43,10 @@ public class ProductMetricsConsumer {
 
         Map<Long, MetricsCounter> counters = new HashMap<>();
 
+        if (topics == null) {
+            return;
+        }
+
         for (int i = 0; i < payloads.size(); i++) {
             String payload = payloads.get(i);
             String topic = topics.get(i);

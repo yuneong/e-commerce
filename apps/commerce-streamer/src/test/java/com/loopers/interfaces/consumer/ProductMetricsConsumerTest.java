@@ -1,5 +1,6 @@
 package com.loopers.interfaces.consumer;
 
+import com.loopers.application.metrics.MetricsCounter;
 import com.loopers.application.metrics.ProductMetricsFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.metrics.ProductMetricsCommand;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -91,6 +93,43 @@ class ProductMetricsConsumerTest {
         consumer.listen(List.of(payload), List.of("unknown-topic"));
 
         verifyNoInteractions(metricsFacade);
+    }
+
+    @Test
+    @DisplayName("여러 payload 처리 후 counters 값이 rankingFacade에 전달된다")
+    void counters_are_aggregated_and_passed_to_rankingFacade() throws Exception {
+        // given
+        String likePayload = """
+            {"eventId":"evt-10", "productId":201, "likeType":"like"}
+        """;
+        String stockPayload = """
+            {"eventId":"evt-11", "productId":201, "stock":2, "changedType":"SUCCESS"}
+        """;
+        String viewPayload = """
+            {"eventId":"evt-12", "productId":201}
+        """;
+
+        List<String> payloads = List.of(likePayload, stockPayload, viewPayload);
+        List<String> topics = List.of("product-like-metrics", "product-stock-metrics", "product-view-metrics");
+
+        // stub metricsFacade 리턴값 (processLikeMetrics 등에서 int 반환)
+        when(metricsFacade.processLikeMetrics(any())).thenReturn(1);
+        when(metricsFacade.processStockMetrics(any())).thenReturn(2);
+        when(metricsFacade.processViewMetrics(any())).thenReturn(3);
+
+        // when
+        consumer.listen(payloads, topics);
+
+        // then - rankingFacade 호출된 counters 확인
+        ArgumentCaptor<Map<Long, MetricsCounter>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(rankingFacade, times(1)).processRanking(captor.capture());
+
+        Map<Long, MetricsCounter> capturedCounters = captor.getValue();
+        MetricsCounter counter = capturedCounters.get(201L);
+
+        assertThat(counter.getLikeCount()).isEqualTo(1);
+        assertThat(counter.getStockCount()).isEqualTo(2);
+        assertThat(counter.getViewCount()).isEqualTo(3);
     }
 
 }

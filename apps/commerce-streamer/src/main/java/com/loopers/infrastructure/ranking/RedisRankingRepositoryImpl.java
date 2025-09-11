@@ -2,7 +2,7 @@ package com.loopers.infrastructure.ranking;
 
 import com.loopers.domain.ranking.RankingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RedisRankingRepositoryImpl implements RankingRepository {
 
-    public StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public void increaseScore(String key, Long productId, double score) {
