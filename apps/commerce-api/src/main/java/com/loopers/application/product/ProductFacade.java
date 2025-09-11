@@ -5,15 +5,12 @@ import com.loopers.domain.common.UserActionEnvelope;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.event.ProductViewedEvent;
+import com.loopers.support.generator.RedisKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 
 @RequiredArgsConstructor
@@ -23,17 +20,6 @@ public class ProductFacade {
     private final ProductService productService;
     private final ApplicationEventPublisher eventPublisher;
     private final RedisTemplate<String, String> redisTemplate;
-
-    public static final DateTimeFormatter DAY = DateTimeFormatter.BASIC_ISO_DATE;
-
-    public String buildKey(LocalDate date) {
-        return "ranking:all:" + date.format(DAY);
-    }
-
-    public String todayKey() {
-        return buildKey(LocalDate.now(ZoneId.of("Asia/Seoul")));
-    }
-
 
     public ProductListInfo getProducts(ProductCommand command, String userId) {
         // service
@@ -57,7 +43,9 @@ public class ProductFacade {
         Product product = productService.getProductDetailForCaching(productId);
 
         // 랭킹 (존재하지 않으면 null)
-        Long rawRank = redisTemplate.opsForZSet().reverseRank(todayKey(), productId.toString());
+        String key = RedisKeyGenerator.todayKey("ranking:all:");
+
+        Long rawRank = redisTemplate.opsForZSet().reverseRank(key, productId.toString());
         Long rank = (rawRank != null) ? rawRank + 1 : null;
 
         // 추후 로그인시 likedYn 추가

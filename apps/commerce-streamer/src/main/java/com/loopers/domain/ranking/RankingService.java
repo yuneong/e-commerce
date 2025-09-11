@@ -1,14 +1,12 @@
 package com.loopers.domain.ranking;
 
 import com.loopers.application.metrics.MetricsCounter;
+import com.loopers.support.generator.RedisKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,18 +17,9 @@ import java.util.Set;
 public class RankingService {
 
     public final RankingRepository rankingRepository;
-    public static final DateTimeFormatter DAY = DateTimeFormatter.BASIC_ISO_DATE;
-
-    public String buildKey(LocalDate date) {
-        return "ranking:all:" + date.format(DAY);
-    }
-
-    public String todayKey() {
-        return buildKey(LocalDate.now(ZoneId.of("Asia/Seoul")));
-    }
 
     public void processRanking(Map<Long, MetricsCounter> metricsCounters) {
-        String key = todayKey();
+        String key = RedisKeyGenerator.todayKey("ranking:all:");
 
         Map<Long, Double> scoreMap = new HashMap<>();
 

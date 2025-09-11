@@ -1,5 +1,6 @@
 package com.loopers.domain.ranking;
 
+import com.loopers.support.generator.RedisKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -7,7 +8,6 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -18,13 +18,9 @@ public class RankingService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    public String buildKey(LocalDate date) {
-        return "ranking:all:" + date.format(DateTimeFormatter.BASIC_ISO_DATE);
-    }
-
     public List<Ranking> getRankings(LocalDate date, Pageable page) {
         // key
-        String key = buildKey(date);
+        String key = RedisKeyGenerator.buildKey("ranking:all:", date);
 
         Set<ZSetOperations.TypedTuple<String>> tuples =
                 redisTemplate.opsForZSet().reverseRangeWithScores(key, page.getOffset(), page.getPageSize());
