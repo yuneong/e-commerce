@@ -20,10 +20,10 @@ public class RankingScheduler {
      */
     @Scheduled(cron = "0 50 23 * * *", zone = "Asia/Seoul")
     public void carryOverYesterdayRankings() {
-        LocalDate yesterday = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        LocalDate tomorrow = today.plusDays(1);
 
-        rankingService.carryOverYesterdayRankings(yesterday, today, 0.8);
+        rankingService.carryOverYesterdayRankings(today, tomorrow, 0.8);
     }
 
 }

@@ -38,7 +38,7 @@ public class RankingService {
         String fromKey = RedisKeyGenerator.buildKey("ranking:all:", from);
         String toKey = RedisKeyGenerator.buildKey("ranking:all:", to);
 
-        // 어제 랭킹
+        // 오늘 랭킹
         Set<ZSetOperations.TypedTuple<String>> tuples =
                 redisTemplate.opsForZSet().rangeWithScores(fromKey, 0, -1);
 
@@ -46,7 +46,7 @@ public class RankingService {
             return;
         }
 
-        // 가중치 적용하여 오늘 랭킹에 추가
+        // 가중치 적용하여 내일 랭킹에 추가
         tuples.forEach(t -> {
             double newScore = t.getScore() * weight;
             redisTemplate.opsForZSet().add(toKey, t.getValue(), newScore);
