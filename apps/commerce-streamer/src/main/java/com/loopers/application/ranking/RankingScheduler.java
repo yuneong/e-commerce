@@ -16,14 +16,14 @@ public class RankingScheduler {
 
     /**
      * 매일 23:50에 어제 랭킹을 오늘 랭킹으로 가중치 낮춰 이관
-     * 어제 랭킹 점수 * 0.8
+     * 어제 랭킹 점수 * 0.5 (임시로 반감기)
      */
     @Scheduled(cron = "0 50 23 * * *", zone = "Asia/Seoul")
     public void carryOverYesterdayRankings() {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDate tomorrow = today.plusDays(1);
 
-        rankingService.carryOverYesterdayRankings(today, tomorrow, 0.8);
+        rankingService.carryOverYesterdayRankings(today, tomorrow, 0.5);
     }
 
 }
