@@ -33,7 +33,7 @@ class ProductMetricsFacadeIntegrationTest {
         long productId = 101L;
 
         ProductMetricsCommand command = new ProductMetricsCommand(
-                eventId, productId, MetricsType.LIKE, "like",null, null
+                eventId, productId, MetricsType.LIKE, "like",0, null
         );
 
         // when
@@ -89,7 +89,7 @@ class ProductMetricsFacadeIntegrationTest {
         long productId = 301L;
 
         ProductMetricsCommand command = new ProductMetricsCommand(
-                eventId, productId, MetricsType.VIEW, null, null, null
+                eventId, productId, MetricsType.VIEW, null, 0, null
         );
 
         // when

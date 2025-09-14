@@ -1,30 +1,28 @@
-package com.loopers.application.product;
+package com.loopers.application.ranking;
 
 import com.loopers.domain.product.Product;
 
 
-public record ProductInfo(
-        Long id,
-        String name,
-        String description,
+public record RankingInfo(
+        Long productId,
+        String productName,
         String imageUrl,
         int price,
         Long likeCount,
-        Long brandId,
         String brandName,
-        Long rank
+        Double score,
+        int rank
 ) {
 
-    public static ProductInfo from(Product product, Long rank) {
-        return new ProductInfo(
+    public static RankingInfo from(Product product, Double score, int rank) {
+        return new RankingInfo(
                 product.getId(),
                 product.getName(),
-                product.getDescription(),
                 product.getImageUrl(),
                 product.getPrice(),
                 product.getLikeCount(),
-                product.getBrand().getId(),
                 product.getBrand().getName(),
+                score,
                 rank
         );
     }

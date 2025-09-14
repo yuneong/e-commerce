@@ -20,6 +20,11 @@ public class ProductMetricsRepositoryImpl implements ProductMetricsRepository {
     }
 
     @Override
+    public Optional<ProductMetrics> findByIdWithLock(ProductMetricsId id) {
+        return Optional.ofNullable(productMetricsJpaRepository.findByIdWithLock(id.getProductId(), id.getDate()));
+    }
+
+    @Override
     public ProductMetrics save(ProductMetrics productMetrics) {
         return productMetricsJpaRepository.save(productMetrics);
     }

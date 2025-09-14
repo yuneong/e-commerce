@@ -15,7 +15,7 @@ public class EventHandled {
 
     @Id private String eventId;
 
-    @Column(name = "domain_name")
+    @Column(name = "domain_type")
     @Enumerated(EnumType.STRING)
     private EventHandledDomainType domainType;
 
