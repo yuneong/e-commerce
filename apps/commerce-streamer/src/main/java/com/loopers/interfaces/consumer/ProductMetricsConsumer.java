@@ -61,19 +61,19 @@ public class ProductMetricsConsumer {
                     ProductLikePayload likePayload = objectMapper.readValue(payload, ProductLikePayload.class);
                     ProductMetricsCommand likeCommand = ProductMetricsCommand.from(likePayload);
                     int likeMetrics = productMetricsFacade.processLikeMetrics(likeCommand);
-                    counters.computeIfAbsent(likeCommand.productId(), k -> new MetricsCounter()).addLike(likeMetrics);
+                    counters.computeIfAbsent(likeCommand.productId(), k -> new MetricsCounter()).setLikeCount(likeMetrics);
                     break;
                 case "product-stock-metrics":
                     ProductStockPayload stockPayload = objectMapper.readValue(payload, ProductStockPayload.class);
                     ProductMetricsCommand stockCommand = ProductMetricsCommand.from(stockPayload);
                     int stockMetrics = productMetricsFacade.processStockMetrics(stockCommand);
-                    counters.computeIfAbsent(stockCommand.productId(), k -> new MetricsCounter()).addStock(stockMetrics);
+                    counters.computeIfAbsent(stockCommand.productId(), k -> new MetricsCounter()).setStockCount(stockMetrics);
                     break;
                 case "product-view-metrics":
                     ProductViewPayload viewPayload = objectMapper.readValue(payload, ProductViewPayload.class);
                     ProductMetricsCommand viewCommand = ProductMetricsCommand.from(viewPayload);
                     int viewMetrics = productMetricsFacade.processViewMetrics(viewCommand);
-                    counters.computeIfAbsent(viewCommand.productId(), k -> new MetricsCounter()).addView(viewMetrics);
+                    counters.computeIfAbsent(viewCommand.productId(), k -> new MetricsCounter()).setViewCount(viewMetrics);
                     break;
             }
         }

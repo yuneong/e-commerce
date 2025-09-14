@@ -34,9 +34,9 @@ class RankingServiceIntegrationTest {
     void processRanking_success() {
         // given
         MetricsCounter counter = new MetricsCounter();
-        counter.addLike(2);
-        counter.addStock(3);
-        counter.addView(5);
+        counter.setLikeCount(2);
+        counter.setStockCount(3);
+        counter.setViewCount(5);
 
         Map<Long, MetricsCounter> metricsMap = Map.of(101L, counter);
 
@@ -64,19 +64,19 @@ class RankingServiceIntegrationTest {
     void processRanking_success_multipleProducts() {
         // given
         MetricsCounter counter1 = new MetricsCounter();
-        counter1.addLike(2);   // 점수 낮음 -> 랭킹 3위 예상
-        counter1.addStock(3);
-        counter1.addView(5);
+        counter1.setLikeCount(2);   // 점수 낮음 -> 랭킹 3위 예상
+        counter1.setStockCount(3);
+        counter1.setViewCount(5);
 
         MetricsCounter counter2 = new MetricsCounter();
-        counter2.addLike(10);  // 점수 높음 -> 랭킹 1위 예상
-        counter2.addStock(10);
-        counter2.addView(1);
+        counter2.setLikeCount(10);  // 점수 높음 -> 랭킹 1위 예상
+        counter2.setStockCount(10);
+        counter2.setViewCount(1);
 
         MetricsCounter counter3 = new MetricsCounter();
-        counter3.addLike(5);   // 중간 점수 -> 랭킹 2위 예상
-        counter3.addStock(3);
-        counter3.addView(2);
+        counter3.setLikeCount(5);   // 중간 점수 -> 랭킹 2위 예상
+        counter3.setStockCount(3);
+        counter3.setViewCount(2);
 
         Map<Long, MetricsCounter> metricsMap = Map.of(
                 101L, counter1,

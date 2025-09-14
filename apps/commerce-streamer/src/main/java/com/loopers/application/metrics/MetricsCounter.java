@@ -13,16 +13,16 @@ public class MetricsCounter {
     private int stockCount;
     private int viewCount;
 
-    public void addLike(int count) {
-        this.likeCount += count;
+    public void setLikeCount(int count) {
+        this.likeCount = count;
     }
 
-    public void addStock(int count) {
-        this.stockCount += count;
+    public void setStockCount(int count) {
+        this.stockCount = count;
     }
 
-    public void addView(int count) {
-        this.viewCount += count;
+    public void setViewCount(int count) {
+        this.viewCount = count;
     }
 
 }

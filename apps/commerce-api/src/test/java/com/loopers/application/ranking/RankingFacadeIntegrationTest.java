@@ -68,7 +68,8 @@ class RankingFacadeIntegrationTest {
         @DisplayName("랭킹과 상품이 정상적으로 매핑되어 RankingInfo 리스트를 반환한다")
         void getRankings_success() {
             // given
-            String today = RedisKeyGenerator.todayKey("ranking:all:");
+            String key = RedisKeyGenerator.todayKey("ranking:all:");
+            String today = LocalDate.now(ZoneId.of("Asia/Seoul")).format(DateTimeFormatter.BASIC_ISO_DATE);
 
             List<Ranking> rankings = List.of(
                     Ranking.create(saveProducts.get(0).getId(), 10.5),
@@ -79,10 +80,10 @@ class RankingFacadeIntegrationTest {
             Set<ZSetOperations.TypedTuple<String>> tuples = rankings.stream()
                     .map(r -> new DefaultTypedTuple<>(r.getProductId().toString(), r.getScore()))
                     .collect(Collectors.toSet());
-            redisTemplate.opsForZSet().add(today, tuples);
+            redisTemplate.opsForZSet().add(key, tuples);
 
             // when
-            List<RankingInfo> result = rankingFacade.getRankings("20250911", pageable);
+            List<RankingInfo> result = rankingFacade.getRankings(today, pageable);
 
             // then
             assertThat(result).hasSize(3);
