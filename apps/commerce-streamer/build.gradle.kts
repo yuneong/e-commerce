@@ -1,5 +1,6 @@
 dependencies {
     // add-ons
+    implementation(project(":apps:commerce-batch"))
     implementation(project(":modules:jpa"))
     implementation(project(":modules:redis"))
     implementation(project(":modules:kafka"))
@@ -21,4 +22,7 @@ dependencies {
     testImplementation(testFixtures(project(":modules:redis")))
     testImplementation(testFixtures(project(":modules:kafka")))
     testImplementation("org.springframework.kafka:spring-kafka-test")
+
+    //batch
+    implementation("org.springframework.boot:spring-boot-starter-batch")
 }
