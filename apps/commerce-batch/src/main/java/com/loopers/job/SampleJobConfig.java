@@ -1,4 +1,4 @@
-package com.loopers.batch;
+package com.loopers.job;
 
 
 import org.springframework.batch.core.Job;
