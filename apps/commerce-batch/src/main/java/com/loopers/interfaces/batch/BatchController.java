@@ -1,0 +1,41 @@
+package com.loopers.interfaces.batch;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.configuration.JobRegistry;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/batch")
+public class BatchController {
+
+    private final JobLauncher jobLauncher;
+    private final JobRegistry jobRegistry;
+
+    @PostMapping("/weekly-ranking")
+    public ResponseEntity<String> runWeeklyRankingJob(
+            @RequestParam String startDate,
+            @RequestParam String endDate
+    ) throws Exception {
+
+        JobParameters params = new JobParametersBuilder()
+                .addString("startDate", startDate)
+                .addString("endDate", endDate)
+                .addLong("timestamp", System.currentTimeMillis()) // 중복 실행 방지
+                .toJobParameters();
+
+        Job job = jobRegistry.getJob("weeklyRankingJob");
+        jobLauncher.run(job, params);
+
+        return ResponseEntity.ok("WeeklyRankingJob started!");
+    }
+
+}
