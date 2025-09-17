@@ -33,7 +33,7 @@ public class WeeklyRankingReader implements ItemReader<ProductMetricsSummary> {
             LocalDate parsedStartDate = LocalDate.parse(startDate);
             LocalDate parsedEndDate = LocalDate.parse(endDate);
 
-            List<ProductMetricsSummary> summaries = productMetricsRepository.findByIdMetricsDateBetween(parsedStartDate, parsedEndDate);
+            List<ProductMetricsSummary> summaries = productMetricsRepository.findByIdProductIdAndDateBetween(parsedStartDate, parsedEndDate);
 
             iterator = summaries.iterator();
         }
