@@ -1,0 +1,21 @@
+package com.loopers.infrastructure.ranking;
+
+import com.loopers.domain.ranking.WeeklyRanking;
+import com.loopers.domain.ranking.WeeklyRankingRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class WeeklyRankingRepositoryImpl implements WeeklyRankingRepository {
+
+    private final WeeklyRankingJpaRepository weeklyRankingJpaRepository;
+
+    @Override
+    public List<WeeklyRanking> saveAll(List<WeeklyRanking> weeklyRankings) {
+        return weeklyRankingJpaRepository.saveAll(weeklyRankings);
+    }
+
+}

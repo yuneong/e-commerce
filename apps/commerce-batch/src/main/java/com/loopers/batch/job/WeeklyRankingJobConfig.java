@@ -1,6 +1,10 @@
-package com.loopers.job;
+package com.loopers.batch.job;
 
-import com.loopers.job.tasklet.WeeklyRankingTasklet;
+import com.loopers.batch.processor.WeeklyRankingProcessor;
+import com.loopers.batch.reader.WeeklyRankingReader;
+import com.loopers.batch.writer.WeeklyRankingWriter;
+import com.loopers.dto.ProductMetricsSummary;
+import com.loopers.dto.RankedProduct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -17,7 +21,9 @@ public class WeeklyRankingJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final WeeklyRankingTasklet weeklyRankingTasklet;
+    private final WeeklyRankingReader weeklyRankingReader;
+    private final WeeklyRankingProcessor weeklyRankingProcessor;
+    private final WeeklyRankingWriter weeklyRankingWriter;
 
     @Bean
     public Job weeklyRankingJob() {
@@ -29,7 +35,11 @@ public class WeeklyRankingJobConfig {
     @Bean
     public Step weeklyRankingStep() {
         return new StepBuilder("weeklyRankingStep", jobRepository)
-                .tasklet(weeklyRankingTasklet, transactionManager)
+                .<ProductMetricsSummary, RankedProduct>chunk(100, transactionManager)
+                .reader(weeklyRankingReader)
+                .processor(weeklyRankingProcessor)
+                .writer(weeklyRankingWriter)
                 .build();
     }
+
 }
