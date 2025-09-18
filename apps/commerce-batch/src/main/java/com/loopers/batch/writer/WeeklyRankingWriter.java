@@ -4,6 +4,7 @@ import com.loopers.domain.ranking.WeeklyRanking;
 import com.loopers.domain.ranking.WeeklyRankingRepository;
 import com.loopers.dto.RankedProduct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
+@StepScope
 public class WeeklyRankingWriter implements ItemWriter<RankedProduct> {
 
     private final WeeklyRankingRepository weeklyRankingRepository;

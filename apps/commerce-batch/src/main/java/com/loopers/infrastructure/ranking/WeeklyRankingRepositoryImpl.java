@@ -5,6 +5,7 @@ import com.loopers.domain.ranking.WeeklyRankingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
@@ -16,6 +17,11 @@ public class WeeklyRankingRepositoryImpl implements WeeklyRankingRepository {
     @Override
     public List<WeeklyRanking> saveAll(List<WeeklyRanking> weeklyRankings) {
         return weeklyRankingJpaRepository.saveAll(weeklyRankings);
+    }
+
+    @Override
+    public List<WeeklyRanking> findByWeekStartAndWeekEnd(LocalDate weekStart, LocalDate weekEnd) {
+        return weeklyRankingJpaRepository.findByWeekStartAndWeekEnd(weekStart, weekEnd);
     }
 
 }
