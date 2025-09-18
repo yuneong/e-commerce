@@ -25,9 +25,10 @@ public class RankingController implements RankingV1ApiSpec {
     @Override
     public ApiResponse<List<RankingV1Dto.RankingsResponse>> getRankings(
             @RequestParam (required = false) String date,
+            @RequestParam (required = false, defaultValue = "daily") String period,
             @PageableDefault(size = 20, page = 1) Pageable pageable
     ) {
-        List<RankingInfo> infos = rankingFacade.getRankings(date, pageable);
+        List<RankingInfo> infos = rankingFacade.getRankings(date, period, pageable);
         List<RankingV1Dto.RankingsResponse> responses = RankingV1Dto.RankingsResponse.from(infos);
 
         return ApiResponse.success(responses);
