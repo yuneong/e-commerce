@@ -11,11 +11,11 @@ import java.time.LocalDate;
 @Table(
         name = "mv_product_rank_weekly",
         indexes = {
-                @Index(name = "idx_week", columnList = "weekStart, weekEnd"),
+                @Index(name = "idx_week", columnList = "week_start, week_end"),
                 @Index(name = "idx_score", columnList = "score"),
         },
         uniqueConstraints = {
-                @UniqueConstraint(name = "uq_weekly_rank", columnNames = {"productId", "weekStart", "weekEnd"})
+                @UniqueConstraint(name = "uq_weekly_rank", columnNames = {"product_id", "week_start", "week_end"})
         }
 )
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
@@ -25,6 +25,7 @@ public class WeeklyRanking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "weekly_rank")
     private int rank;
 
     private Long productId;
