@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 
 @Component
@@ -44,6 +45,24 @@ public class RankingScheduler {
                 "http://localhost:28081/api/v1/batch/weekly-ranking?startDate=%s&endDate=%s",
                 lastWeekStart,
                 lastWeekEnd
+        );
+
+        restTemplate.postForEntity(url, null, String.class);
+    }
+
+    /**
+     * 월간 랭킹 배치
+     * 매달 1일 01:00에 지난달 랭킹 집계 배치 api 호출
+     * - 지난달 1일 ~ 말일
+     */
+    @Scheduled(cron = "0 0 1 1 * *", zone = "Asia/Seoul")
+    public void monthlyRankingJob() {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        YearMonth lastMonth = YearMonth.from(today).minusMonths(1);
+
+        String url = String.format(
+                "http://localhost:28081/api/v1/batch/monthly-ranking?yearMonth=%s",
+                lastMonth
         );
 
         restTemplate.postForEntity(url, null, String.class);

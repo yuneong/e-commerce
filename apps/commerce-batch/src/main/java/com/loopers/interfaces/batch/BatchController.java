@@ -38,4 +38,20 @@ public class BatchController {
         return ResponseEntity.ok("WeeklyRankingJob started!");
     }
 
+    @PostMapping("/monthly-ranking")
+    public ResponseEntity<String> runMonthlyRankingJob(
+            @RequestParam String yearMonth
+    ) throws Exception {
+
+        JobParameters params = new JobParametersBuilder()
+                .addString("yearMonth", yearMonth)
+                .addLong("timestamp", System.currentTimeMillis()) // 중복 실행 방지
+                .toJobParameters();
+
+        Job job = jobRegistry.getJob("monthlyRankingJob");
+        jobLauncher.run(job, params);
+
+        return ResponseEntity.ok("monthlyRankingJob started!");
+    }
+
 }
