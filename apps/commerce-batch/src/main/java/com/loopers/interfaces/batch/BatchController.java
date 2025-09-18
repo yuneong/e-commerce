@@ -1,9 +1,7 @@
 package com.loopers.interfaces.batch;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +47,11 @@ public class BatchController {
                 .toJobParameters();
 
         Job job = jobRegistry.getJob("monthlyRankingJob");
-        jobLauncher.run(job, params);
+        JobExecution execution = jobLauncher.run(job, params);
+
+        if (execution.getStatus() == BatchStatus.FAILED) {
+            return ResponseEntity.status(500).body("monthlyRankingJob failed!");
+        }
 
         return ResponseEntity.ok("monthlyRankingJob started!");
     }
