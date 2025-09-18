@@ -24,4 +24,9 @@ public class WeeklyRankingRepositoryImpl implements WeeklyRankingRepository {
         return weeklyRankingJpaRepository.findByWeekStartAndWeekEnd(weekStart, weekEnd);
     }
 
+    @Override
+    public List<WeeklyRanking> findByWeekRange(LocalDate monthStart, LocalDate monthEnd) {
+        return weeklyRankingJpaRepository.findByWeekRange(monthStart, monthEnd);
+    }
+
 }

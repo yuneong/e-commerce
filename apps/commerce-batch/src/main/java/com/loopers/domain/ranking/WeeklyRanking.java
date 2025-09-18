@@ -8,7 +8,16 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Table(name = "mv_product_rank_weekly")
+@Table(
+        name = "mv_product_rank_weekly",
+        indexes = {
+                @Index(name = "idx_week", columnList = "weekStart, weekEnd"),
+                @Index(name = "idx_score", columnList = "score"),
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_weekly_rank", columnNames = {"productId", "weekStart", "weekEnd"})
+        }
+)
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WeeklyRanking {
 

@@ -9,4 +9,6 @@ public interface WeeklyRankingRepository {
 
     List<WeeklyRanking> findByWeekStartAndWeekEnd(LocalDate weekStart, LocalDate weekEnd);
 
+    List<WeeklyRanking> findByWeekRange(LocalDate monthStart, LocalDate monthEnd);
+
 }
