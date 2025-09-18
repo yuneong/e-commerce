@@ -25,7 +25,17 @@ public class RankingRepositoryImpl implements RankingRepository {
     }
 
     @Override
+    public List<WeeklyRanking> saveAllWeekly(List<WeeklyRanking> weeklyRankings) {
+        return weeklyRankingJpaRepository.saveAll(weeklyRankings);
+    }
+
+    @Override
     public List<MonthlyRanking> findMonthlyRankingByDate(YearMonth monthlyPeriod, Pageable pageable) {
         return monthlyRankingJpaRepository.findByMonthPeriod(monthlyPeriod, pageable);
+    }
+
+    @Override
+    public List<MonthlyRanking> saveAllMonthly(List<MonthlyRanking> monthlyRankings) {
+        return monthlyRankingJpaRepository.saveAll(monthlyRankings);
     }
 }

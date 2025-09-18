@@ -15,11 +15,11 @@ public interface MonthlyRankingJpaRepository extends JpaRepository<MonthlyRankin
     @Query("""
         SELECT mr
         FROM MonthlyRanking mr
-        WHERE mr.monthPeriod = :monthPeriod
+        WHERE mr.monthPeriod = :monthlyPeriod
         ORDER BY mr.rank ASC
     """)
     List<MonthlyRanking> findByMonthPeriod(
-            @Param("monthlyPeriod") YearMonth monthPeriod,
+            @Param("monthlyPeriod") YearMonth monthlyPeriod,
             Pageable pageable
     );
 }

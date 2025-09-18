@@ -11,6 +11,10 @@ public interface RankingRepository {
 
     List<WeeklyRanking> findWeeklyRankingByDate(LocalDate startDate, LocalDate endDate, Pageable pageable);
 
+    List<WeeklyRanking> saveAllWeekly(List<WeeklyRanking> weeklyRankings);
+
     List<MonthlyRanking> findMonthlyRankingByDate(YearMonth monthlyPeriod, Pageable pageable);
+
+    List<MonthlyRanking> saveAllMonthly(List<MonthlyRanking> monthlyRankings);
 
 }
