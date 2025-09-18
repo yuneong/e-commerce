@@ -2,6 +2,9 @@ management:
   server:
     port: 28081
 
+server:
+  port: 28080
+
 spring:
   application:
     name: commerce-batch
@@ -12,11 +15,6 @@ spring:
       - jpa.yml
       - logging.yml
       - monitoring.yml
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
 
   batch:
     job:
