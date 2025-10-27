@@ -26,6 +26,12 @@ public interface RankingV1ApiSpec {
             )
             @RequestParam String date,
             @Parameter(
+                    name = "period",
+                    description = "랭킹 조회 타입 (daily, weekly, monthly)",
+                    required = false
+            )
+            @RequestParam String period,
+            @Parameter(
                     name = "pageable",
                     description = "페이징 정보 (쿼리 파라미터)",
                     required = false

@@ -1,0 +1,42 @@
+management:
+  server:
+    port: 28081
+
+server:
+  port: 28080
+
+spring:
+  application:
+    name: commerce-batch
+  profiles:
+    active: local
+  config:
+    import:
+      - jpa.yml
+      - logging.yml
+      - monitoring.yml
+
+  batch:
+    job:
+      enabled: false   # 애플리케이션 실행 시 자동 잡 실행 방지
+    jdbc:
+      initialize-schema: always
+
+ranking:
+  weights:
+    like: 0.2
+    order: 0.7
+    view: 0.1
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local, test
+
+datasource:
+  mysql-jpa:
+    main:
+      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      username: application
+      password: application

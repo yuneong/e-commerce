@@ -25,14 +25,21 @@ public class RankingFacade {
     private final RankingService rankingService;
     private final ProductService productService;
 
-    public List<RankingInfo> getRankings(String date, Pageable page) {
+    public List<RankingInfo> getRankings(String date, String period, Pageable page) {
         // 문자열 -> LocalDate 변환
         LocalDate localDate = (date != null)
                 ? LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE)
                 : LocalDate.now(ZoneId.of("Asia/Seoul"));
 
+        // period → enum
+        RankingPeriod rankingPeriod = RankingPeriod.fromString(period);
+
         // 랭킹 조회
-        List<Ranking> rankings = rankingService.getRankings(localDate, page);
+        List<Ranking> rankings = switch (rankingPeriod) {
+            case DAILY -> rankingService.getDailyRankings(localDate, page);
+            case WEEKLY -> rankingService.getWeeklyRankings(localDate, page);
+            case MONTHLY -> rankingService.getMonthlyRankings(localDate, page);
+        };
 
         // 상품 조회
         List<Long> productIds = rankings.stream()
